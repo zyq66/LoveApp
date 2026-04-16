@@ -35,7 +35,7 @@ export function RegisterScreen({ navigation }: any) {
       <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
         {loading ? <ActivityIndicator color={colors.bg} /> : <Text style={styles.buttonText}>注册</Text>}
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+      <TouchableOpacity onPress={() => navigation.replace('Login')}>
         <Text style={styles.link}>已有账号？去登录</Text>
       </TouchableOpacity>
     </View>
