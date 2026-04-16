@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, SafeAreaView,
+  Modal, TextInput,
 } from 'react-native';
 import { getDoc, doc } from 'firebase/firestore';
 import { useAuth } from '../store/AuthContext';
@@ -16,6 +17,8 @@ export function HomeScreen() {
   const { userId, coupleId } = useAuth();
   const [daysTogether, setDaysTogether] = useState(0);
   const [anniversaries, setAnniversaries] = useState<Anniversary[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [inputName, setInputName] = useState('');
 
   useEffect(() => {
     if (!coupleId) return;
@@ -30,18 +33,13 @@ export function HomeScreen() {
     getAnniversaries(coupleId).then(setAnniversaries);
   }, [coupleId]);
 
-  async function handleAddAnniversary() {
-    Alert.prompt(
-      '添加纪念日',
-      '输入名称（如：生日、第一次约会）',
-      async (name) => {
-        if (!name || !coupleId) return;
-        // Default: 30 days from now as placeholder; user can manage dates in More screen later
-        await addAnniversary(coupleId, name, Date.now() + 86400000 * 30);
-        const updated = await getAnniversaries(coupleId);
-        setAnniversaries(updated);
-      },
-    );
+  async function handleConfirmAdd() {
+    if (!inputName.trim() || !coupleId) return;
+    await addAnniversary(coupleId, inputName.trim(), Date.now() + 86400000 * 30);
+    const updated = await getAnniversaries(coupleId);
+    setAnniversaries(updated);
+    setInputName('');
+    setModalVisible(false);
   }
 
   async function handleDeleteAnniversary(itemId: string) {
@@ -78,11 +76,36 @@ export function HomeScreen() {
               <AnniversaryTag name={a.name} date={a.date} />
             </TouchableOpacity>
           ))}
-          <TouchableOpacity style={styles.addBtn} onPress={handleAddAnniversary}>
+          <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
             <Text style={styles.addBtnText}>＋ 添加纪念日</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Add anniversary modal (cross-platform, works on Android) */}
+      <Modal visible={modalVisible} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>添加纪念日</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="名称（如：生日、第一次约会）"
+              placeholderTextColor={colors.whiteSecondary}
+              value={inputName}
+              onChangeText={setInputName}
+              autoFocus
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={() => { setModalVisible(false); setInputName(''); }}>
+                <Text style={styles.modalCancel}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirm} onPress={handleConfirmAdd}>
+                <Text style={styles.modalConfirmText}>确定</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -118,4 +141,12 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   addBtnText: { color: colors.whiteSecondary, fontSize: 12 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+  modalBox: { backgroundColor: '#16213e', borderRadius: 16, padding: spacing.lg, width: '85%', borderWidth: 1, borderColor: colors.whiteBorder },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.white, marginBottom: spacing.md },
+  modalInput: { backgroundColor: colors.whiteDim, borderWidth: 1, borderColor: colors.whiteBorder, borderRadius: 10, padding: spacing.md, color: colors.white, fontSize: 15, marginBottom: spacing.md },
+  modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+  modalCancel: { color: colors.whiteSecondary, fontSize: 15, padding: spacing.sm },
+  modalConfirm: { backgroundColor: colors.green, borderRadius: 8, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  modalConfirmText: { color: colors.bg, fontWeight: '700', fontSize: 15 },
 });
