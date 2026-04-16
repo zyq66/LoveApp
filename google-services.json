@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "376542289174",
+    "project_id": "love-slbum",
+    "storage_bucket": "love-slbum.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:376542289174:android:b05bc87ec969e07fd78437",
+        "android_client_info": {
+          "package_name": "com.loveData"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqsEZUI2RMQV6Tju3puVT54va11I3EFso"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

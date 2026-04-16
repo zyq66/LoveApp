@@ -4,12 +4,12 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "REPLACE_ME",
-  authDomain: "REPLACE_ME",
-  projectId: "REPLACE_ME",
-  storageBucket: "REPLACE_ME",
-  messagingSenderId: "REPLACE_ME",
-  appId: "REPLACE_ME",
+  apiKey: "AIzaSyCqsEZUI2RMQV6Tju3puVT54va11I3EFso",
+  authDomain: "love-slbum.firebaseapp.com",
+  projectId: "love-slbum",
+  storageBucket: "love-slbum.firebasestorage.app",
+  messagingSenderId: "376542289174",
+  appId: "1:376542289174:android:b05bc87ec969e07fd78437",
 };
 
 const app = initializeApp(firebaseConfig);
