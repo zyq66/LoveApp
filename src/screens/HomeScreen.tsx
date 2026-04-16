@@ -19,6 +19,7 @@ export function HomeScreen() {
   const [anniversaries, setAnniversaries] = useState<Anniversary[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [inputName, setInputName] = useState('');
+  const [inputDate, setInputDate] = useState('');
 
   useEffect(() => {
     if (!coupleId) return;
@@ -33,13 +34,30 @@ export function HomeScreen() {
     getAnniversaries(coupleId).then(setAnniversaries);
   }, [coupleId]);
 
+  function closeModal() {
+    setModalVisible(false);
+    setInputName('');
+    setInputDate('');
+  }
+
   async function handleConfirmAdd() {
     if (!inputName.trim() || !coupleId) return;
-    await addAnniversary(coupleId, inputName.trim(), Date.now() + 86400000 * 30);
+    // Parse date input MM-DD, default to this year
+    let dateTs = Date.now() + 86400000 * 30;
+    const match = inputDate.trim().match(/^(\d{1,2})-(\d{1,2})$/);
+    if (match) {
+      const year = new Date().getFullYear();
+      const parsed = new Date(year, parseInt(match[1]) - 1, parseInt(match[2]));
+      if (!isNaN(parsed.getTime())) {
+        // If date already passed this year, use next year
+        if (parsed.getTime() < Date.now()) parsed.setFullYear(year + 1);
+        dateTs = parsed.getTime();
+      }
+    }
+    await addAnniversary(coupleId, inputName.trim(), dateTs);
     const updated = await getAnniversaries(coupleId);
     setAnniversaries(updated);
-    setInputName('');
-    setModalVisible(false);
+    closeModal();
   }
 
   async function handleDeleteAnniversary(itemId: string) {
@@ -83,7 +101,7 @@ export function HomeScreen() {
       </ScrollView>
 
       {/* Add anniversary modal (cross-platform, works on Android) */}
-      <Modal visible={modalVisible} transparent animationType="fade">
+      <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={closeModal}>
         <View style={styles.overlay}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>添加纪念日</Text>
@@ -95,8 +113,17 @@ export function HomeScreen() {
               onChangeText={setInputName}
               autoFocus
             />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="日期（格式：MM-DD，如 06-01）"
+              placeholderTextColor={colors.whiteSecondary}
+              value={inputDate}
+              onChangeText={setInputDate}
+              keyboardType="numbers-and-punctuation"
+              maxLength={5}
+            />
             <View style={styles.modalButtons}>
-              <TouchableOpacity onPress={() => { setModalVisible(false); setInputName(''); }}>
+              <TouchableOpacity onPress={closeModal}>
                 <Text style={styles.modalCancel}>取消</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirm} onPress={handleConfirmAdd}>
