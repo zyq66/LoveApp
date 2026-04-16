@@ -18,27 +18,25 @@ const Stack = createStackNavigator();
 function RootNavigator() {
   const { userId, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator color={colors.green} size="large" />
-      </View>
-    );
-  }
-
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {userId ? (
-          <Stack.Screen name="Main" component={MainApp} />
-        ) : (
-          <>
-            <Stack.Screen name="Register" component={RegisterScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="CoupleCode" component={CoupleCodeScreen} />
-          </>
-        )}
-      </Stack.Navigator>
+      {loading ? (
+        <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator color={colors.green} size="large" />
+        </View>
+      ) : (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {userId ? (
+            <Stack.Screen name="Main" component={MainApp} />
+          ) : (
+            <>
+              <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="CoupleCode" component={CoupleCodeScreen} />
+            </>
+          )}
+        </Stack.Navigator>
+      )}
     </NavigationContainer>
   );
 }
