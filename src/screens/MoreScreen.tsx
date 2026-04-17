@@ -1,35 +1,45 @@
 // src/screens/MoreScreen.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
-  View, Text, StyleSheet, TouchableOpacity,
-  Alert, ScrollView, Modal, TextInput, Image, ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '../store/AuthContext';
-import { db } from '../config/cloudbase';
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  Modal,
+  TextInput,
+  Image,
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
+import { useAuth } from "../store/AuthContext";
+import { db } from "../config/cloudbase";
 import {
-  getAnniversaries, addAnniversary, deleteAnniversary, Anniversary,
-} from '../services/anniversaries';
-import { unbindCouple } from '../services/auth';
-import { uploadImage } from '../services/storage';
-import { DatePicker } from '../components/DatePicker';
-import { colors, spacing } from '../theme';
+  getAnniversaries,
+  addAnniversary,
+  deleteAnniversary,
+  Anniversary,
+} from "../services/anniversaries";
+import { unbindCouple } from "../services/auth";
+import { uploadImage } from "../services/storage";
+import { DatePicker } from "../components/DatePicker";
+import { colors, spacing } from "../theme";
 
 function formatDisplayDate(ms: number): string {
-  if (!ms) return '未设置';
+  if (!ms) return "未设置";
   const d = new Date(ms);
   return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
 }
-
 
 export function MoreScreen() {
   const { userId, coupleId, gender, setAuth, clearAuth } = useAuth();
 
   // Profile
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [currentNickname, setCurrentNickname] = useState('');
+  const [currentNickname, setCurrentNickname] = useState("");
 
   // Together date
   const [startDate, setStartDate] = useState(0);
@@ -38,52 +48,63 @@ export function MoreScreen() {
   // Anniversaries
   const [anniversaries, setAnniversaries] = useState<Anniversary[]>([]);
   const [annModal, setAnnModal] = useState(false);
-  const [annName, setAnnName] = useState('');
+  const [annName, setAnnName] = useState("");
   const [annPickerDate, setAnnPickerDate] = useState(new Date());
   const [showAnnPicker, setShowAnnPicker] = useState(false);
 
   // Nickname modal
   const [nicknameModal, setNicknameModal] = useState(false);
-  const [nickname, setNickname] = useState('');
+  const [nickname, setNickname] = useState("");
 
   useEffect(() => {
     if (!userId) return;
-    db.collection('users').doc(userId).get().then((res: any) => {
-      const u = (res.data as any[])?.[0];
-      if (u) {
-        setAvatarUrl(u.avatarUrl || '');
-        setCurrentNickname(u.nickname || '');
-      }
-    });
+    db.collection("users")
+      .doc(userId)
+      .get()
+      .then((res: any) => {
+        const u = (res.data as any[])?.[0];
+        if (u) {
+          setAvatarUrl(u.avatarUrl || "");
+          setCurrentNickname(u.nickname || "");
+        }
+      });
   }, [userId]);
 
   useEffect(() => {
     if (!coupleId) return;
-    db.collection('couples').doc(coupleId).get().then((res: any) => {
-      const c = (res.data as any[])?.[0];
-      if (c) setStartDate(c.startDate || 0);
-    });
+    db.collection("couples")
+      .doc(coupleId)
+      .get()
+      .then((res: any) => {
+        const c = (res.data as any[])?.[0];
+        if (c) setStartDate(c.startDate || 0);
+      });
     getAnniversaries(coupleId).then(setAnniversaries);
   }, [coupleId]);
 
   // ── Avatar ──────────────────────────────────────────────
   async function handlePickAvatar() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') { Alert.alert('需要相册权限', '请在设置中允许访问相册'); return; }
+    if (status !== "granted") {
+      Alert.alert("需要相册权限", "请在设置中允许访问相册");
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true, aspect: [1, 1], quality: 0.8,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
     });
     if (result.canceled || !result.assets[0]) return;
     setAvatarUploading(true);
     try {
       const uri = result.assets[0].uri;
-      const url = await uploadImage(uri, 'avatars');
-      await db.collection('users').doc(userId!).update({ avatarUrl: url });
+      const url = await uploadImage(uri, "avatars");
+      await db.collection("users").doc(userId!).update({ avatarUrl: url });
       setAvatarUrl(url);
-      Alert.alert('头像已更新');
+      Alert.alert("头像已更新");
     } catch (e: any) {
-      Alert.alert('上传失败', e.message);
+      Alert.alert("上传失败", e.message);
     } finally {
       setAvatarUploading(false);
     }
@@ -93,10 +114,10 @@ export function MoreScreen() {
   async function handleSaveNickname() {
     if (!userId || !nickname.trim()) return;
     const trimmed = nickname.trim();
-    await db.collection('users').doc(userId).update({ nickname: trimmed });
+    await db.collection("users").doc(userId).update({ nickname: trimmed });
     setCurrentNickname(trimmed);
     setNicknameModal(false);
-    setNickname('');
+    setNickname("");
   }
 
   // ── Together date ─────────────────────────────────────────
@@ -104,7 +125,7 @@ export function MoreScreen() {
     setShowStartPicker(false);
     if (!coupleId) return;
     const ts = date.getTime();
-    await db.collection('couples').doc(coupleId).update({ startDate: ts });
+    await db.collection("couples").doc(coupleId).update({ startDate: ts });
     setStartDate(ts);
   }
 
@@ -115,24 +136,26 @@ export function MoreScreen() {
     const picked = new Date(annPickerDate);
     const now = new Date();
     picked.setFullYear(now.getFullYear());
-    if (picked.getTime() < Date.now()) picked.setFullYear(now.getFullYear() + 1);
+    if (picked.getTime() < Date.now())
+      picked.setFullYear(now.getFullYear() + 1);
     await addAnniversary(coupleId, annName.trim(), picked.getTime());
     const updated = await getAnniversaries(coupleId);
     setAnniversaries(updated);
     setAnnModal(false);
-    setAnnName('');
+    setAnnName("");
     setAnnPickerDate(new Date());
   }
 
   function handleDeleteAnniversary(item: Anniversary) {
-    Alert.alert('删除纪念日', `确定删除「${item.name}」吗？`, [
-      { text: '取消', style: 'cancel' },
+    Alert.alert("删除纪念日", `确定删除「${item.name}」吗？`, [
+      { text: "取消", style: "cancel" },
       {
-        text: '删除', style: 'destructive',
+        text: "删除",
+        style: "destructive",
         onPress: async () => {
           if (!coupleId) return;
           await deleteAnniversary(coupleId, item.id);
-          setAnniversaries(prev => prev.filter(a => a.id !== item.id));
+          setAnniversaries((prev) => prev.filter((a) => a.id !== item.id));
         },
       },
     ]);
@@ -140,10 +163,11 @@ export function MoreScreen() {
 
   // ── Unbind / Logout ───────────────────────────────────────
   function handleUnbind() {
-    Alert.alert('解绑情侣', '解绑后需要重新配对才能同步数据，确定吗？', [
-      { text: '取消', style: 'cancel' },
+    Alert.alert("解绑情侣", "解绑后需要重新配对才能同步数据，确定吗？", [
+      { text: "取消", style: "cancel" },
       {
-        text: '确定解绑', style: 'destructive',
+        text: "确定解绑",
+        style: "destructive",
         onPress: async () => {
           if (!coupleId || !userId) return;
           await unbindCouple(userId, coupleId);
@@ -154,9 +178,9 @@ export function MoreScreen() {
   }
 
   function handleLogout() {
-    Alert.alert('退出登录', '确定要退出吗？', [
-      { text: '取消', style: 'cancel' },
-      { text: '退出', style: 'destructive', onPress: clearAuth },
+    Alert.alert("退出登录", "确定要退出吗？", [
+      { text: "取消", style: "cancel" },
+      { text: "退出", style: "destructive", onPress: clearAuth },
     ]);
   }
 
@@ -166,13 +190,21 @@ export function MoreScreen() {
         <Text style={styles.pageTitle}>更多</Text>
 
         {/* Avatar */}
-        <TouchableOpacity style={styles.avatarWrap} onPress={handlePickAvatar} disabled={avatarUploading}>
+        <TouchableOpacity
+          style={styles.avatarWrap}
+          onPress={handlePickAvatar}
+          disabled={avatarUploading}
+        >
           {avatarUploading ? (
-            <View style={styles.avatarCircle}><ActivityIndicator color={colors.green} /></View>
+            <View style={styles.avatarCircle}>
+              <ActivityIndicator color={colors.green} />
+            </View>
           ) : avatarUrl ? (
             <Image source={{ uri: avatarUrl }} style={styles.avatarCircle} />
           ) : (
-            <View style={styles.avatarCircle}><Text style={styles.avatarPlaceholder}>👤</Text></View>
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarPlaceholder}>👤</Text>
+            </View>
           )}
           <Text style={styles.avatarHint}>点击更换头像</Text>
         </TouchableOpacity>
@@ -180,10 +212,16 @@ export function MoreScreen() {
         {/* 账户 */}
         <Text style={styles.sectionTitle}>账户</Text>
         <View style={styles.section}>
-          <TouchableOpacity style={styles.row} onPress={() => { setNickname(currentNickname); setNicknameModal(true); }}>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => {
+              setNickname(currentNickname);
+              setNicknameModal(true);
+            }}
+          >
             <Text style={styles.rowLabel}>昵称</Text>
             <View style={styles.rowRight}>
-              <Text style={styles.rowValue}>{currentNickname || '未设置'}</Text>
+              <Text style={styles.rowValue}>{currentNickname || "未设置"}</Text>
               <Text style={styles.rowArrow}>›</Text>
             </View>
           </TouchableOpacity>
@@ -191,22 +229,48 @@ export function MoreScreen() {
             <Text style={styles.rowLabel}>性别</Text>
             <View style={styles.genderToggle}>
               <TouchableOpacity
-                style={[styles.genderBtn, gender === 'male' && styles.genderBtnActive]}
+                style={[
+                  styles.genderBtn,
+                  gender === "male" && styles.genderBtnActive,
+                ]}
                 onPress={async () => {
-                  await db.collection('users').doc(userId!).update({ gender: 'male' });
-                  setAuth(userId!, coupleId!, 'male');
+                  await db
+                    .collection("users")
+                    .doc(userId!)
+                    .update({ gender: "male" });
+                  setAuth(userId!, coupleId!, "male");
                 }}
               >
-                <Text style={[styles.genderBtnText, gender === 'male' && styles.genderBtnTextActive]}>👦 男生</Text>
+                <Text
+                  style={[
+                    styles.genderBtnText,
+                    gender === "male" && styles.genderBtnTextActive,
+                  ]}
+                >
+                  👦 男生
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.genderBtn, gender === 'female' && styles.genderBtnActiveFemale]}
+                style={[
+                  styles.genderBtn,
+                  gender === "female" && styles.genderBtnActiveFemale,
+                ]}
                 onPress={async () => {
-                  await db.collection('users').doc(userId!).update({ gender: 'female' });
-                  setAuth(userId!, coupleId!, 'female');
+                  await db
+                    .collection("users")
+                    .doc(userId!)
+                    .update({ gender: "female" });
+                  setAuth(userId!, coupleId!, "female");
                 }}
               >
-                <Text style={[styles.genderBtnText, gender === 'female' && styles.genderBtnTextActiveFemale]}>👧 女生</Text>
+                <Text
+                  style={[
+                    styles.genderBtnText,
+                    gender === "female" && styles.genderBtnTextActiveFemale,
+                  ]}
+                >
+                  👧 女生
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -215,14 +279,22 @@ export function MoreScreen() {
         {/* 情侣 */}
         <Text style={styles.sectionTitle}>情侣</Text>
         <View style={styles.section}>
-          <TouchableOpacity style={styles.row} onPress={() => setShowStartPicker(true)}>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => setShowStartPicker(true)}
+          >
             <Text style={styles.rowLabel}>在一起的日期</Text>
             <View style={styles.rowRight}>
-              <Text style={styles.rowValue}>{formatDisplayDate(startDate)}</Text>
+              <Text style={styles.rowValue}>
+                {formatDisplayDate(startDate)}
+              </Text>
               <Text style={styles.rowArrow}>›</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.row, styles.rowLast]} onPress={handleUnbind}>
+          <TouchableOpacity
+            style={[styles.row, styles.rowLast]}
+            onPress={handleUnbind}
+          >
             <Text style={[styles.rowLabel, styles.danger]}>解绑情侣</Text>
             <Text style={styles.rowArrow}>›</Text>
           </TouchableOpacity>
@@ -231,7 +303,10 @@ export function MoreScreen() {
         {/* 纪念日 */}
         <View style={styles.annHeader}>
           <Text style={styles.sectionTitle}>纪念日</Text>
-          <TouchableOpacity style={styles.annAddBtn} onPress={() => setAnnModal(true)}>
+          <TouchableOpacity
+            style={styles.annAddBtn}
+            onPress={() => setAnnModal(true)}
+          >
             <Text style={styles.annAddBtnText}>＋ 添加</Text>
           </TouchableOpacity>
         </View>
@@ -243,18 +318,30 @@ export function MoreScreen() {
           ) : (
             anniversaries.map((a, i) => {
               const daysLeft = Math.ceil((a.date - Date.now()) / 86400000);
-              const label = daysLeft === 0 ? '今天 🎉' : daysLeft > 0 ? `${daysLeft} 天后` : `${Math.abs(daysLeft)} 天前`;
+              const label =
+                daysLeft === 0
+                  ? "今天 🎉"
+                  : daysLeft > 0
+                  ? `${daysLeft} 天后`
+                  : `${Math.abs(daysLeft)} 天前`;
               const urgent = daysLeft >= 0 && daysLeft <= 7;
               return (
                 <TouchableOpacity
                   key={a.id}
-                  style={[styles.row, i === anniversaries.length - 1 && styles.rowLast]}
+                  style={[
+                    styles.row,
+                    i === anniversaries.length - 1 && styles.rowLast,
+                  ]}
                   onLongPress={() => handleDeleteAnniversary(a)}
                   delayLongPress={500}
                 >
                   <Text style={styles.rowLabel}>{a.name}</Text>
                   <View style={styles.rowRight}>
-                    <Text style={[styles.rowValue, urgent && styles.rowValueUrgent]}>{label}</Text>
+                    <Text
+                      style={[styles.rowValue, urgent && styles.rowValueUrgent]}
+                    >
+                      {label}
+                    </Text>
                     <Text style={styles.rowArrow}>⋯</Text>
                   </View>
                 </TouchableOpacity>
@@ -267,17 +354,25 @@ export function MoreScreen() {
         {/* 其他 */}
         <Text style={styles.sectionTitle}>其他</Text>
         <View style={styles.section}>
-          <TouchableOpacity style={[styles.row, styles.rowLast]} onPress={handleLogout}>
+          <TouchableOpacity
+            style={[styles.row, styles.rowLast]}
+            onPress={handleLogout}
+          >
             <Text style={[styles.rowLabel, styles.danger]}>退出登录</Text>
             <Text style={styles.rowArrow}>›</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.version}>LoveApp v1.0</Text>
+        <Text style={styles.version}>LoveLetter v1.0</Text>
       </ScrollView>
 
       {/* Nickname modal */}
-      <Modal visible={nicknameModal} transparent animationType="fade" onRequestClose={() => setNicknameModal(false)}>
+      <Modal
+        visible={nicknameModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNicknameModal(false)}
+      >
         <View style={styles.overlay}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>修改昵称</Text>
@@ -291,10 +386,18 @@ export function MoreScreen() {
               maxLength={20}
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity onPress={() => { setNicknameModal(false); setNickname(''); }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setNicknameModal(false);
+                  setNickname("");
+                }}
+              >
                 <Text style={styles.modalCancel}>取消</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalConfirm} onPress={handleSaveNickname}>
+              <TouchableOpacity
+                style={styles.modalConfirm}
+                onPress={handleSaveNickname}
+              >
                 <Text style={styles.modalConfirmText}>保存</Text>
               </TouchableOpacity>
             </View>
@@ -303,7 +406,12 @@ export function MoreScreen() {
       </Modal>
 
       {/* Add anniversary modal */}
-      <Modal visible={annModal} transparent animationType="fade" onRequestClose={() => setAnnModal(false)}>
+      <Modal
+        visible={annModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAnnModal(false)}
+      >
         <View style={styles.overlay}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>添加纪念日</Text>
@@ -316,17 +424,31 @@ export function MoreScreen() {
               autoFocus
               maxLength={20}
             />
-            <TouchableOpacity style={styles.dateField} onPress={() => setShowAnnPicker(true)}>
+            <TouchableOpacity
+              style={styles.dateField}
+              onPress={() => setShowAnnPicker(true)}
+            >
               <Text style={styles.dateFieldLabel}>日期</Text>
               <Text style={styles.dateFieldValue}>
-                {`${annPickerDate.getMonth() + 1} 月 ${annPickerDate.getDate()} 日`}
+                {`${
+                  annPickerDate.getMonth() + 1
+                } 月 ${annPickerDate.getDate()} 日`}
               </Text>
             </TouchableOpacity>
             <View style={styles.modalButtons}>
-              <TouchableOpacity onPress={() => { setAnnModal(false); setAnnName(''); setAnnPickerDate(new Date()); }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setAnnModal(false);
+                  setAnnName("");
+                  setAnnPickerDate(new Date());
+                }}
+              >
                 <Text style={styles.modalCancel}>取消</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalConfirm} onPress={handleAddAnniversary}>
+              <TouchableOpacity
+                style={styles.modalConfirm}
+                onPress={handleAddAnniversary}
+              >
                 <Text style={styles.modalConfirmText}>添加</Text>
               </TouchableOpacity>
             </View>
@@ -345,7 +467,10 @@ export function MoreScreen() {
       <DatePicker
         visible={showAnnPicker}
         value={annPickerDate}
-        onChange={(d) => { setAnnPickerDate(d); setShowAnnPicker(false); }}
+        onChange={(d) => {
+          setAnnPickerDate(d);
+          setShowAnnPicker(false);
+        }}
         onCancel={() => setShowAnnPicker(false)}
       />
     </SafeAreaView>
@@ -354,56 +479,168 @@ export function MoreScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  pageTitle: { fontSize: 22, fontWeight: '700', color: colors.white, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm },
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.white,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+  },
 
-  avatarWrap: { alignItems: 'center', paddingVertical: spacing.lg },
-  avatarCircle: { width: 84, height: 84, borderRadius: 42, backgroundColor: colors.whiteDim, borderWidth: 2, borderColor: colors.greenBorder, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarWrap: { alignItems: "center", paddingVertical: spacing.lg },
+  avatarCircle: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: colors.whiteDim,
+    borderWidth: 2,
+    borderColor: colors.greenBorder,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
   avatarPlaceholder: { fontSize: 36 },
   avatarHint: { color: colors.whiteSecondary, fontSize: 12, marginTop: 8 },
 
-  sectionTitle: { fontSize: 12, color: colors.whiteSecondary, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm, letterSpacing: 1 },
-  section: { backgroundColor: '#16213e', marginHorizontal: spacing.lg, borderRadius: 12, borderWidth: 1, borderColor: colors.whiteBorder, overflow: 'hidden' },
+  sectionTitle: {
+    fontSize: 12,
+    color: colors.whiteSecondary,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    letterSpacing: 1,
+  },
+  section: {
+    backgroundColor: "#16213e",
+    marginHorizontal: spacing.lg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.whiteBorder,
+    overflow: "hidden",
+  },
 
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.whiteBorder },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.whiteBorder,
+  },
   rowLast: { borderBottomWidth: 0 },
   rowLabel: { fontSize: 15, color: colors.white },
-  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  rowRight: { flexDirection: "row", alignItems: "center", gap: 6 },
   rowValue: { fontSize: 13, color: colors.whiteSecondary, maxWidth: 180 },
-  rowValueUrgent: { color: colors.green, fontWeight: '600' },
+  rowValueUrgent: { color: colors.green, fontWeight: "600" },
   rowArrow: { fontSize: 18, color: colors.whiteSecondary },
-  danger: { color: '#f87171' },
+  danger: { color: "#f87171" },
 
-  annHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: spacing.lg },
-  annAddBtn: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: colors.greenBorder, backgroundColor: colors.greenDim },
-  annAddBtnText: { fontSize: 12, color: colors.green },
-  annHint: { fontSize: 11, color: colors.whiteSecondary, paddingHorizontal: spacing.lg, marginTop: 6 },
-
-  version: { textAlign: 'center', color: colors.whiteSecondary, fontSize: 12, marginTop: spacing.xl },
-
-  genderToggle: { flexDirection: 'row', gap: 8 },
-  genderBtn: {
-    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16,
-    borderWidth: 1, borderColor: colors.whiteBorder, backgroundColor: colors.whiteDim,
+  annHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingRight: spacing.lg,
   },
-  genderBtnActive: { borderColor: colors.greenBorder, backgroundColor: colors.greenDim },
-  genderBtnActiveFemale: { borderColor: '#f9a8d4', backgroundColor: 'rgba(249,168,212,0.12)' },
-  genderBtnText: { fontSize: 13, color: colors.whiteSecondary },
-  genderBtnTextActive: { color: colors.green, fontWeight: '600' },
-  genderBtnTextActiveFemale: { color: '#f9a8d4', fontWeight: '600' },
+  annAddBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.greenBorder,
+    backgroundColor: colors.greenDim,
+  },
+  annAddBtnText: { fontSize: 12, color: colors.green },
+  annHint: {
+    fontSize: 11,
+    color: colors.whiteSecondary,
+    paddingHorizontal: spacing.lg,
+    marginTop: 6,
+  },
 
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
-  modalBox: { backgroundColor: '#16213e', borderRadius: 16, padding: spacing.lg, width: '85%', borderWidth: 1, borderColor: colors.whiteBorder },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.white, marginBottom: spacing.md },
-  modalInput: { backgroundColor: colors.whiteDim, borderWidth: 1, borderColor: colors.whiteBorder, borderRadius: 10, padding: spacing.md, color: colors.white, fontSize: 15, marginBottom: spacing.md },
-  modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+  version: {
+    textAlign: "center",
+    color: colors.whiteSecondary,
+    fontSize: 12,
+    marginTop: spacing.xl,
+  },
+
+  genderToggle: { flexDirection: "row", gap: 8 },
+  genderBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.whiteBorder,
+    backgroundColor: colors.whiteDim,
+  },
+  genderBtnActive: {
+    borderColor: colors.greenBorder,
+    backgroundColor: colors.greenDim,
+  },
+  genderBtnActiveFemale: {
+    borderColor: "#f9a8d4",
+    backgroundColor: "rgba(249,168,212,0.12)",
+  },
+  genderBtnText: { fontSize: 13, color: colors.whiteSecondary },
+  genderBtnTextActive: { color: colors.green, fontWeight: "600" },
+  genderBtnTextActiveFemale: { color: "#f9a8d4", fontWeight: "600" },
+
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalBox: {
+    backgroundColor: "#16213e",
+    borderRadius: 16,
+    padding: spacing.lg,
+    width: "85%",
+    borderWidth: 1,
+    borderColor: colors.whiteBorder,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.white,
+    marginBottom: spacing.md,
+  },
+  modalInput: {
+    backgroundColor: colors.whiteDim,
+    borderWidth: 1,
+    borderColor: colors.whiteBorder,
+    borderRadius: 10,
+    padding: spacing.md,
+    color: colors.white,
+    fontSize: 15,
+    marginBottom: spacing.md,
+  },
+  modalButtons: { flexDirection: "row", justifyContent: "flex-end", gap: 12 },
   dateField: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: colors.whiteDim, borderWidth: 1, borderColor: colors.whiteBorder,
-    borderRadius: 10, padding: spacing.md, marginBottom: spacing.md,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: colors.whiteDim,
+    borderWidth: 1,
+    borderColor: colors.whiteBorder,
+    borderRadius: 10,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   dateFieldLabel: { fontSize: 14, color: colors.whiteSecondary },
-  dateFieldValue: { fontSize: 15, color: colors.green, fontWeight: '600' },
-  modalCancel: { color: colors.whiteSecondary, fontSize: 15, padding: spacing.sm },
-  modalConfirm: { backgroundColor: colors.green, borderRadius: 8, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  modalConfirmText: { color: colors.bg, fontWeight: '700', fontSize: 15 },
+  dateFieldValue: { fontSize: 15, color: colors.green, fontWeight: "600" },
+  modalCancel: {
+    color: colors.whiteSecondary,
+    fontSize: 15,
+    padding: spacing.sm,
+  },
+  modalConfirm: {
+    backgroundColor: colors.green,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  modalConfirmText: { color: colors.bg, fontWeight: "700", fontSize: 15 },
 });
