@@ -5,7 +5,6 @@ import {
   Modal, TextInput, Image, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getDoc, doc } from 'firebase/firestore';
 import { useFocusEffect } from '@react-navigation/native';
 import { DatePicker } from '../components/DatePicker';
 import { generateAnniversaryWish } from '../services/ai';
@@ -14,7 +13,7 @@ import { useAuth } from '../store/AuthContext';
 import {
   getAnniversaries, addAnniversary, deleteAnniversary, Anniversary,
 } from '../services/anniversaries';
-import { db } from '../config/firebase';
+import { db } from '../config/cloudbase';
 import { colors, spacing } from '../theme';
 
 Notifications.setNotificationHandler({
@@ -80,25 +79,28 @@ export function HomeScreen() {
     React.useCallback(() => {
       if (!coupleId || !userId) return;
 
-      getDoc(doc(db, 'couples', coupleId)).then(async snap => {
-        if (!snap.exists()) return;
-        const data = snap.data();
+      db.collection('couples').doc(coupleId).get().then(async (coupleRes: any) => {
+        const coupleList = coupleRes.data as any[];
+        if (!coupleList || coupleList.length === 0) return;
+        const data = coupleList[0];
         const days = Math.floor((Date.now() - data.startDate) / 86400000);
         setDaysTogether(Math.max(0, days));
         setStartDate(data.startDate || 0);
 
         const partnerId = data.user1 === userId ? data.user2 : data.user1;
-        const [mySnap, partnerSnap] = await Promise.all([
-          getDoc(doc(db, 'users', userId)),
-          partnerId ? getDoc(doc(db, 'users', partnerId)) : Promise.resolve(null),
+        const [myRes, partnerRes] = await Promise.all([
+          db.collection('users').doc(userId).get(),
+          partnerId ? db.collection('users').doc(partnerId).get() : Promise.resolve(null),
         ]);
-        if (mySnap.exists()) {
-          setMyAvatar(mySnap.data().avatarUrl || '');
-          setMyNickname(mySnap.data().nickname || '');
+        const myData = ((myRes as any)?.data as any[])?.[0];
+        if (myData) {
+          setMyAvatar(myData.avatarUrl || '');
+          setMyNickname(myData.nickname || '');
         }
-        if (partnerSnap?.exists()) {
-          setPartnerAvatar(partnerSnap.data().avatarUrl || '');
-          setPartnerNickname(partnerSnap.data().nickname || '');
+        const partnerData = ((partnerRes as any)?.data as any[])?.[0];
+        if (partnerData) {
+          setPartnerAvatar(partnerData.avatarUrl || '');
+          setPartnerNickname(partnerData.nickname || '');
         }
       });
 

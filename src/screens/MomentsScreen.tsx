@@ -9,10 +9,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { DatePicker } from '../components/DatePicker';
 import { useAuth } from '../store/AuthContext';
 import { listenMoments, addMoment, deleteMoment, Moment } from '../services/moments';
+import { uploadImage } from '../services/storage';
 import { colors, spacing } from '../theme';
-
-const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/daxodeygk/image/upload';
-const CLOUDINARY_UPLOAD_PRESET = 'lovedataPic';
 
 const EMOJIS = ['🌸', '🌟', '🎉', '💕', '🌈', '🍃', '☕', '🎵', '🌙', '🔥'];
 
@@ -72,22 +70,13 @@ export function MomentsScreen() {
     setPendingPhoto(result.assets[0].uri);
   }
 
-  async function uploadToCloudinary(uri: string): Promise<string> {
-    const formData = new FormData();
-    formData.append('file', { uri, type: 'image/jpeg', name: 'moment.jpg' } as any);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    const res = await fetch(CLOUDINARY_UPLOAD_URL, { method: 'POST', body: formData });
-    const data = await res.json();
-    return data.secure_url as string;
-  }
-
   async function handleConfirmAdd() {
     if (!title.trim() || !coupleId || !userId) return;
     setUploading(true);
     try {
       let photoUrl: string | undefined;
       if (pendingPhoto) {
-        photoUrl = await uploadToCloudinary(pendingPhoto);
+        photoUrl = await uploadImage(pendingPhoto, 'moments');
       }
       await addMoment(coupleId, userId, {
         title: title.trim(),

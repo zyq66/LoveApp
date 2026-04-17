@@ -1,0 +1,6 @@
+{
+  "name": "ai-proxy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "description": "TCB cloud function — DeepSeek AI proxy"
+}

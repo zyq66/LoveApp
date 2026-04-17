@@ -13,10 +13,8 @@ import {
   addReaction, deleteLetter, Letter,
 } from '../services/letters';
 import { generateLoveLetter, analyzeMood, generateDailyTopic } from '../services/ai';
+import { uploadImage } from '../services/storage';
 import { colors, spacing } from '../theme';
-
-const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/daxodeygk/image/upload';
-const CLOUDINARY_UPLOAD_PRESET = 'lovedataPic';
 
 const MOODS = [
   { emoji: '😊', label: '开心' },
@@ -138,12 +136,8 @@ export function LetterScreen() {
     setImgUploading(true);
     try {
       const uri = result.assets[0].uri;
-      const formData = new FormData();
-      formData.append('file', { uri, type: 'image/jpeg', name: 'letter.jpg' } as any);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      const res = await fetch(CLOUDINARY_UPLOAD_URL, { method: 'POST', body: formData });
-      const data = await res.json();
-      await sendImage(coupleId, userId, data.secure_url, mood);
+      const url = await uploadImage(uri, 'letters');
+      await sendImage(coupleId, userId, url, mood);
     } finally {
       setImgUploading(false);
     }

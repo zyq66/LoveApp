@@ -5,18 +5,15 @@ import {
   Alert, ScrollView, Modal, TextInput, Image, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../store/AuthContext';
-import { db } from '../config/firebase';
+import { db } from '../config/cloudbase';
 import {
   getAnniversaries, addAnniversary, deleteAnniversary, Anniversary,
 } from '../services/anniversaries';
+import { uploadImage } from '../services/storage';
 import { DatePicker } from '../components/DatePicker';
 import { colors, spacing } from '../theme';
-
-const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/daxodeygk/image/upload';
-const CLOUDINARY_UPLOAD_PRESET = 'lovedataPic';
 
 function formatDisplayDate(ms: number): string {
   if (!ms) return '未设置';
@@ -50,18 +47,20 @@ export function MoreScreen() {
 
   useEffect(() => {
     if (!userId) return;
-    getDoc(doc(db, 'users', userId)).then(snap => {
-      if (snap.exists()) {
-        setAvatarUrl(snap.data().avatarUrl || '');
-        setCurrentNickname(snap.data().nickname || '');
+    db.collection('users').doc(userId).get().then((res: any) => {
+      const u = (res.data as any[])?.[0];
+      if (u) {
+        setAvatarUrl(u.avatarUrl || '');
+        setCurrentNickname(u.nickname || '');
       }
     });
   }, [userId]);
 
   useEffect(() => {
     if (!coupleId) return;
-    getDoc(doc(db, 'couples', coupleId)).then(snap => {
-      if (snap.exists()) setStartDate(snap.data().startDate || 0);
+    db.collection('couples').doc(coupleId).get().then((res: any) => {
+      const c = (res.data as any[])?.[0];
+      if (c) setStartDate(c.startDate || 0);
     });
     getAnniversaries(coupleId).then(setAnniversaries);
   }, [coupleId]);
@@ -78,13 +77,9 @@ export function MoreScreen() {
     setAvatarUploading(true);
     try {
       const uri = result.assets[0].uri;
-      const formData = new FormData();
-      formData.append('file', { uri, type: 'image/jpeg', name: 'avatar.jpg' } as any);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      const res = await fetch(CLOUDINARY_UPLOAD_URL, { method: 'POST', body: formData });
-      const data = await res.json();
-      await updateDoc(doc(db, 'users', userId!), { avatarUrl: data.secure_url });
-      setAvatarUrl(data.secure_url);
+      const url = await uploadImage(uri, 'avatars');
+      await db.collection('users').doc(userId!).update({ avatarUrl: url });
+      setAvatarUrl(url);
       Alert.alert('头像已更新');
     } catch (e: any) {
       Alert.alert('上传失败', e.message);
@@ -97,7 +92,7 @@ export function MoreScreen() {
   async function handleSaveNickname() {
     if (!userId || !nickname.trim()) return;
     const trimmed = nickname.trim();
-    await updateDoc(doc(db, 'users', userId), { nickname: trimmed });
+    await db.collection('users').doc(userId).update({ nickname: trimmed });
     setCurrentNickname(trimmed);
     setNicknameModal(false);
     setNickname('');
@@ -108,7 +103,7 @@ export function MoreScreen() {
     setShowStartPicker(false);
     if (!coupleId) return;
     const ts = date.getTime();
-    await updateDoc(doc(db, 'couples', coupleId), { startDate: ts });
+    await db.collection('couples').doc(coupleId).update({ startDate: ts });
     setStartDate(ts);
   }
 
@@ -150,16 +145,16 @@ export function MoreScreen() {
         text: '确定解绑', style: 'destructive',
         onPress: async () => {
           if (!coupleId || !userId) return;
-          const snap = await getDoc(doc(db, 'couples', coupleId));
-          if (snap.exists()) {
-            const data = snap.data();
-            if (data.user1 === userId) {
-              await updateDoc(doc(db, 'couples', coupleId), { user1: null, status: 'pending' });
+          const res: any = await db.collection('couples').doc(coupleId).get();
+          const coupleData = (res.data as any[])?.[0];
+          if (coupleData) {
+            if (coupleData.user1 === userId) {
+              await db.collection('couples').doc(coupleId).update({ user1: '', status: 'pending' });
             } else {
-              await updateDoc(doc(db, 'couples', coupleId), { user2: null, status: 'pending' });
+              await db.collection('couples').doc(coupleId).update({ user2: '', status: 'pending' });
             }
           }
-          await updateDoc(doc(db, 'users', userId), { coupleId: null });
+          await db.collection('users').doc(userId).update({ coupleId: '' });
           clearAuth();
         },
       },

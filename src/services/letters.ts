@@ -1,9 +1,5 @@
 // src/services/letters.ts
-import { db } from '../config/firebase';
-import {
-  collection, addDoc, query, orderBy, onSnapshot,
-  updateDoc, deleteDoc, doc,
-} from 'firebase/firestore';
+import { db } from '../config/cloudbase';
 
 export interface Letter {
   id: string;
@@ -14,66 +10,48 @@ export interface Letter {
   imageUrl?: string;
   createdAt: number;
   read: boolean;
-  reactions: Record<string, string>; // userId -> emoji
+  reactions: Record<string, string>;
 }
 
-export async function sendLetter(
-  coupleId: string,
-  userId: string,
-  content: string,
-  mood: string,
-): Promise<void> {
-  await addDoc(collection(db, `letters/${coupleId}/messages`), {
-    from: userId, content, mood, type: 'text',
+export async function sendLetter(coupleId: string, userId: string, content: string, mood: string): Promise<void> {
+  await db.collection('messages').add({
+    coupleId, from: userId, content, mood, type: 'text',
     createdAt: Date.now(), read: false, reactions: {},
   });
 }
 
-export async function sendImage(
-  coupleId: string,
-  userId: string,
-  imageUrl: string,
-  mood: string,
-): Promise<void> {
-  await addDoc(collection(db, `letters/${coupleId}/messages`), {
-    from: userId, content: '', mood, type: 'image', imageUrl,
+export async function sendImage(coupleId: string, userId: string, imageUrl: string, mood: string): Promise<void> {
+  await db.collection('messages').add({
+    coupleId, from: userId, content: '', mood, type: 'image', imageUrl,
     createdAt: Date.now(), read: false, reactions: {},
   });
 }
 
 export function listenLetters(coupleId: string, callback: (letters: Letter[]) => void) {
-  const q = query(
-    collection(db, `letters/${coupleId}/messages`),
-    orderBy('createdAt', 'asc'),
-  );
-  return onSnapshot(q, snap => {
-    callback(snap.docs.map(d => {
-      const data = d.data();
-      return {
-        id: d.id,
-        type: 'text',
-        reactions: {},
-        ...data,
-      } as Letter;
-    }));
-  });
+  const watcher = db.collection('messages')
+    .where({ coupleId })
+    .watch({
+      onChange: (snapshot: any) => {
+        const letters = (snapshot.docs as any[])
+          .map(d => ({ type: 'text', reactions: {}, ...d, id: d._id }))
+          .sort((a: any, b: any) => a.createdAt - b.createdAt) as Letter[];
+        callback(letters);
+      },
+      onError: (err: any) => console.error('listenLetters error', err),
+    });
+  return () => watcher.close();
 }
 
 export async function markRead(coupleId: string, letterId: string): Promise<void> {
-  await updateDoc(doc(db, `letters/${coupleId}/messages/${letterId}`), { read: true });
+  await db.collection('messages').doc(letterId).update({ read: true });
 }
 
-export async function addReaction(
-  coupleId: string,
-  letterId: string,
-  userId: string,
-  emoji: string,
-): Promise<void> {
-  await updateDoc(doc(db, `letters/${coupleId}/messages/${letterId}`), {
+export async function addReaction(coupleId: string, letterId: string, userId: string, emoji: string): Promise<void> {
+  await db.collection('messages').doc(letterId).update({
     [`reactions.${userId}`]: emoji,
   });
 }
 
 export async function deleteLetter(coupleId: string, letterId: string): Promise<void> {
-  await deleteDoc(doc(db, `letters/${coupleId}/messages/${letterId}`));
+  await db.collection('messages').doc(letterId).remove();
 }
