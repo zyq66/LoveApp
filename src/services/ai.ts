@@ -95,3 +95,16 @@ export async function generateAnniversaryWish(name: string, daysLeft: number): P
     style: pick(WISH_STYLES),
   });
 }
+
+// ── 今日小任务 ────────────────────────────────────────────────────────────────
+
+const TASK_DIRECTIONS = [
+  '温馨日常', '甜蜜撒娇', '亲密挑逗',
+  '温馨日常', '温馨日常', '甜蜜撒娇', // 权重：日常40% 撒娇35% 挑逗25%
+  '甜蜜撒娇', '温馨日常', '亲密挑逗',
+  '温馨日常', '甜蜜撒娇', '温馨日常',
+];
+
+export async function generateDailyTask(): Promise<string> {
+  return callAI('task', { direction: pick(TASK_DIRECTIONS) });
+}
