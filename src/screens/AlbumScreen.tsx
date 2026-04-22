@@ -2,12 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ScrollView, Alert, ActivityIndicator, Modal, TextInput,
+  ScrollView, Alert, ActivityIndicator, Modal, TextInput, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../store/AuthContext';
-import { uploadPhoto, listenPhotos, Photo } from '../services/album';
+import { uploadPhoto, fetchPhotos, addPhotoReaction, removePhotoReaction, Photo } from '../services/album';
 import { PhotoTimeline } from '../components/PhotoTimeline';
 import { PhotoGrid } from '../components/PhotoGrid';
 import { colors, spacing } from '../theme';
@@ -19,15 +19,22 @@ export function AlbumScreen() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [mode, setMode] = useState<ViewMode>('timeline');
   const [uploading, setUploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [captionModal, setCaptionModal] = useState(false);
   const [pendingUri, setPendingUri] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
 
-  useEffect(() => {
+  async function loadPhotos() {
     if (!coupleId) return;
-    const unsub = listenPhotos(coupleId, setPhotos);
-    return unsub;
-  }, [coupleId]);
+    setRefreshing(true);
+    try {
+      setPhotos(await fetchPhotos(coupleId));
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  useEffect(() => { loadPhotos(); }, [coupleId]);
 
   async function handlePickPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -50,6 +57,7 @@ export function AlbumScreen() {
     setUploading(true);
     try {
       await uploadPhoto(coupleId, userId, pendingUri, caption.trim());
+      await loadPhotos();
     } catch (e: any) {
       Alert.alert('上传失败', e.message);
     } finally {
@@ -63,6 +71,17 @@ export function AlbumScreen() {
     setCaptionModal(false);
     setPendingUri(null);
     setCaption('');
+  }
+
+  async function handleReact(photo: Photo, emoji: string) {
+    if (!userId) return;
+    const current = photo.reactions?.[userId];
+    if (current === emoji) {
+      await removePhotoReaction(photo.id, userId);
+    } else {
+      await addPhotoReaction(photo.id, userId, emoji);
+    }
+    await loadPhotos();
   }
 
   return (
@@ -88,10 +107,13 @@ export function AlbumScreen() {
       </View>
 
       {/* Photo list */}
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadPhotos} tintColor={colors.green} />}
+      >
         {mode === 'timeline'
-          ? <PhotoTimeline photos={photos} />
-          : <PhotoGrid photos={photos} />
+          ? <PhotoTimeline photos={photos} userId={userId ?? ''} onReact={handleReact} />
+          : <PhotoGrid photos={photos} userId={userId ?? ''} onReact={handleReact} />
         }
       </ScrollView>
 
