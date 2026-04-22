@@ -1,13 +1,15 @@
 // src/services/letters.ts
-import { db } from '../config/cloudbase';
+import { db, authReady } from '../config/cloudbase';
 
 export interface Letter {
   id: string;
   from: string;
   content: string;
   mood: string;
-  type: 'text' | 'image';
+  type: 'text' | 'image' | 'voice';
   imageUrl?: string;
+  voiceUrl?: string;
+  duration?: number;
   createdAt: number;
   read: boolean;
   reactions: Record<string, string>;
@@ -27,19 +29,36 @@ export async function sendImage(coupleId: string, userId: string, imageUrl: stri
   });
 }
 
+export async function sendVoice(coupleId: string, userId: string, voiceUrl: string, duration: number, mood: string): Promise<void> {
+  await db.collection('messages').add({
+    coupleId, from: userId, content: '', mood, type: 'voice', voiceUrl, duration,
+    createdAt: Date.now(), read: false, reactions: {},
+  });
+}
+
 export function listenLetters(coupleId: string, callback: (letters: Letter[]) => void) {
-  const watcher = db.collection('messages')
-    .where({ coupleId })
-    .watch({
-      onChange: (snapshot: any) => {
-        const letters = (snapshot.docs as any[])
-          .map(d => ({ type: 'text', reactions: {}, ...d, id: d._id }))
-          .sort((a: any, b: any) => a.createdAt - b.createdAt) as Letter[];
-        callback(letters);
-      },
-      onError: (err: any) => console.error('listenLetters error', err),
-    });
-  return () => watcher.close();
+  let cancelled = false;
+
+  async function poll() {
+    if (cancelled) return;
+    try {
+      await authReady;
+      const res = await db.collection('messages')
+        .where({ coupleId })
+        .orderBy('createdAt', 'asc')
+        .limit(100)
+        .get();
+      const letters = ((res.data as any[]) ?? [])
+        .map(d => ({ type: 'text', reactions: {}, ...d, id: d._id })) as Letter[];
+      callback(letters);
+    } catch (e) {
+      console.error('listenLetters error', e);
+    }
+    if (!cancelled) setTimeout(poll, 5000);
+  }
+
+  poll();
+  return () => { cancelled = true; };
 }
 
 export async function markRead(coupleId: string, letterId: string): Promise<void> {
