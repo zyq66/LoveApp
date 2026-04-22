@@ -28,6 +28,11 @@ exports.main = async (event) => {
     userPrompt = `纪念日名称：「${event.name}」，${event.urgency}。写一段专属祝福语。`;
     maxTokens = 160;
 
+  } else if (type === 'task') {
+    system = `你是一个情侣关系顾问，专为两人设计每日小任务。这是一个情侣私密 App，任务内容可以温馨、甜蜜或亲密挑逗。输出一句话，不超过 25 字，直接输出任务本身，不加任何前缀、序号或说明。`;
+    userPrompt = `今天的任务方向：${event.direction}。生成一个适合情侣今天完成的小任务。`;
+    maxTokens = 60;
+
   } else {
     return { error: 'unknown type' };
   }
