@@ -15,6 +15,7 @@ import {
 } from '../services/anniversaries';
 import { db } from '../config/cloudbase';
 import { colors, spacing } from '../theme';
+import { DailyTaskWidget } from '../components/DailyTaskWidget';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -223,6 +224,8 @@ export function HomeScreen() {
             </Text>
           )}
         </View>
+
+      <DailyTaskWidget />
 
         {/* ── Anniversary Section ── */}
         <View style={styles.section}>
