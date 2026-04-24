@@ -79,6 +79,8 @@ export function HomeScreen() {
     db.collection('users').doc(userId).get().then((res: any) => {
       const user = (res.data as any[])?.[0];
       if (user?.code) setMyCode(user.code);
+    }).catch((e: any) => {
+      console.error('fetch myCode error', e);
     });
   }, [coupleId, userId]);
 
@@ -206,6 +208,7 @@ export function HomeScreen() {
             <TouchableOpacity
               style={styles.pairCodeBox}
               onPress={async () => {
+                if (!myCode) return;
                 await Clipboard.setStringAsync(myCode);
                 Alert.alert('已复制');
               }}

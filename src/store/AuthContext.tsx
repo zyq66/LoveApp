@@ -24,9 +24,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const uid = pairs[0][1];
       const cid = pairs[1][1];
       const g = pairs[2][1] as 'male' | 'female' | null;
-      if (uid && cid) {
+      if (uid) {
         setUserId(uid);
-        setCoupleId(cid);
+        setCoupleId(cid ?? '');
         setGender(g);
       }
       setLoading(false);
