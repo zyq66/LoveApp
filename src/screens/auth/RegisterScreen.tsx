@@ -16,7 +16,7 @@ export function RegisterScreen({ navigation }: any) {
     if (password.length < 6) return Alert.alert('密码至少 6 位');
     setLoading(true);
     try {
-      const { userId, coupleCode } = await register(phone, password, gender);
+      const { userId } = await register(phone, password, gender);
       // 注册后直接进入主页（coupleId 为空，首页显示配对卡片）
       setAuth(userId, '', gender);
     } catch (e: any) {
