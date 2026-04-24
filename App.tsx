@@ -9,7 +9,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AuthProvider, useAuth } from './src/store/AuthContext';
 import { RegisterScreen } from './src/screens/auth/RegisterScreen';
 import { LoginScreen } from './src/screens/auth/LoginScreen';
-import { CoupleCodeScreen } from './src/screens/auth/CoupleCodeScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { AlbumScreen } from './src/screens/AlbumScreen';
 import { LetterScreen } from './src/screens/LetterScreen';
@@ -38,7 +37,7 @@ function MainTabs() {
 }
 
 function RootNavigator() {
-  const { userId, coupleId, loading } = useAuth();
+  const { userId, loading } = useAuth();
 
   return (
     <NavigationContainer>
@@ -48,15 +47,12 @@ function RootNavigator() {
         </View>
       ) : (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {userId && coupleId ? (
+          {userId ? (
             <Stack.Screen name="Main" component={MainTabs} />
-          ) : userId && !coupleId ? (
-            <Stack.Screen name="CoupleCode" component={CoupleCodeScreen} />
           ) : (
             <>
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="CoupleCode" component={CoupleCodeScreen} />
             </>
           )}
         </Stack.Navigator>
