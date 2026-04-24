@@ -6,21 +6,16 @@ import { useAuth } from '../../store/AuthContext';
 
 export function LoginScreen({ navigation }: any) {
   const [phone, setPhone] = useState('');
-  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { setAuth } = useAuth();
 
   async function handleLogin() {
-    if (!phone || !code) return Alert.alert('请填写手机号和情侣码');
+    if (!phone || !password) return Alert.alert('请填写手机号和密码');
     setLoading(true);
     try {
-      const { userId, coupleId, gender } = await login(phone, code.toUpperCase());
-      if (coupleId) {
-        setAuth(userId, coupleId, gender);
-      } else {
-        // 已解绑，需要重新配对
-        setAuth(userId, '', gender);
-      }
+      const { userId, coupleId, gender } = await login(phone, password);
+      setAuth(userId, coupleId, gender);
     } catch (e: any) {
       Alert.alert('登录失败', e.message);
     } finally {
@@ -31,8 +26,24 @@ export function LoginScreen({ navigation }: any) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>欢迎回来</Text>
-      <TextInput style={styles.input} placeholder="手机号" placeholderTextColor={colors.whiteSecondary} value={phone} onChangeText={setPhone} keyboardType="phone-pad" maxLength={11} />
-      <TextInput style={styles.input} placeholder="情侣码" placeholderTextColor={colors.whiteSecondary} value={code} onChangeText={setCode} autoCapitalize="characters" maxLength={6} />
+      <TextInput
+        style={styles.input}
+        placeholder="手机号"
+        placeholderTextColor={colors.whiteSecondary}
+        value={phone}
+        onChangeText={setPhone}
+        keyboardType="phone-pad"
+        maxLength={11}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="密码"
+        placeholderTextColor={colors.whiteSecondary}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        maxLength={20}
+      />
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         {loading ? <ActivityIndicator color={colors.bg} /> : <Text style={styles.buttonText}>登录</Text>}
       </TouchableOpacity>
