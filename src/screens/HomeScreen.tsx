@@ -14,6 +14,8 @@ import {
   getAnniversaries, addAnniversary, deleteAnniversary, Anniversary,
 } from '../services/anniversaries';
 import { db } from '../config/cloudbase';
+import * as Clipboard from 'expo-clipboard';
+import { pairCouple } from '../services/auth';
 import { colors, spacing } from '../theme';
 import { DailyTaskWidget } from '../components/DailyTaskWidget';
 
@@ -55,7 +57,10 @@ function daysLeftLabel(date: number): { text: string; urgent: boolean } {
 }
 
 export function HomeScreen() {
-  const { userId, coupleId } = useAuth();
+  const { userId, coupleId, gender, setAuth } = useAuth();
+  const [myCode, setMyCode] = useState('');
+  const [partnerCodeInput, setPartnerCodeInput] = useState('');
+  const [pairLoading, setPairLoading] = useState(false);
   const [daysTogether, setDaysTogether] = useState(0);
   const [startDate, setStartDate] = useState(0);
   const [anniversaries, setAnniversaries] = useState<Anniversary[]>([]);
@@ -68,6 +73,27 @@ export function HomeScreen() {
   const [partnerAvatar, setPartnerAvatar] = useState('');
   const [myNickname, setMyNickname] = useState('');
   const [partnerNickname, setPartnerNickname] = useState('');
+
+  useEffect(() => {
+    if (coupleId || !userId) return;
+    db.collection('users').doc(userId).get().then((res: any) => {
+      const user = (res.data as any[])?.[0];
+      if (user?.code) setMyCode(user.code);
+    });
+  }, [coupleId, userId]);
+
+  async function handlePair() {
+    if (partnerCodeInput.length < 4 || !userId) return;
+    setPairLoading(true);
+    try {
+      const newCoupleId = await pairCouple(userId, partnerCodeInput);
+      setAuth(userId, newCoupleId, gender ?? 'male');
+    } catch (e: any) {
+      Alert.alert('配对失败', e.message);
+    } finally {
+      setPairLoading(false);
+    }
+  }
 
   // AI wish
   const [wishModal, setWishModal] = useState(false);
@@ -170,6 +196,45 @@ export function HomeScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+
+        {/* ── Pairing Card (shown when not yet paired) ── */}
+        {!coupleId && (
+          <View style={styles.pairCard}>
+            <Text style={styles.pairTitle}>💑 还未配对</Text>
+
+            <Text style={styles.pairLabel}>你的配对码</Text>
+            <TouchableOpacity
+              style={styles.pairCodeBox}
+              onPress={async () => {
+                await Clipboard.setStringAsync(myCode);
+                Alert.alert('已复制');
+              }}
+            >
+              <Text style={styles.pairCode}>
+                {myCode ? myCode.split('').join('  ') : '—'}
+              </Text>
+              <Text style={styles.pairCopyHint}>点击复制</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.pairLabel}>输入对方的 4 位配对码</Text>
+            <View style={styles.pairInputRow}>
+              <TextInput
+                style={styles.pairInput}
+                placeholder="_ _ _ _"
+                placeholderTextColor={colors.whiteSecondary}
+                value={partnerCodeInput}
+                onChangeText={setPartnerCodeInput}
+                keyboardType="number-pad"
+                maxLength={4}
+              />
+              <TouchableOpacity style={styles.pairBtn} onPress={handlePair} disabled={pairLoading}>
+                {pairLoading
+                  ? <ActivityIndicator color={colors.bg} size="small" />
+                  : <Text style={styles.pairBtnText}>配对</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* ── Hero Section ── */}
         <View style={styles.hero}>
@@ -461,4 +526,81 @@ const styles = StyleSheet.create({
   wishLoading: { alignItems: 'center', paddingVertical: spacing.lg, gap: 8 },
   wishLoadingText: { color: colors.whiteSecondary, fontSize: 13 },
   wishText: { color: colors.white, fontSize: 15, lineHeight: 24, marginBottom: spacing.md },
+
+  // ── Pairing card ──
+  pairCard: {
+    margin: spacing.lg,
+    marginTop: spacing.xl,
+    backgroundColor: colors.bgLight,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.greenBorder,
+    padding: spacing.lg,
+    gap: 4,
+  },
+  pairTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.white,
+    marginBottom: spacing.md,
+  },
+  pairLabel: {
+    fontSize: 12,
+    color: colors.whiteSecondary,
+    marginBottom: 6,
+    marginTop: spacing.sm,
+  },
+  pairCodeBox: {
+    backgroundColor: colors.greenDim,
+    borderWidth: 1,
+    borderColor: colors.greenBorder,
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  pairCode: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: colors.green,
+    letterSpacing: 4,
+  },
+  pairCopyHint: {
+    fontSize: 11,
+    color: colors.whiteSecondary,
+    marginTop: 4,
+  },
+  pairInputRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  pairInput: {
+    flex: 1,
+    backgroundColor: colors.whiteDim,
+    borderWidth: 1,
+    borderColor: colors.whiteBorder,
+    borderRadius: 12,
+    padding: spacing.md,
+    color: colors.white,
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+    letterSpacing: 6,
+  },
+  pairBtn: {
+    backgroundColor: colors.green,
+    borderRadius: 12,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 72,
+    height: 52,
+  },
+  pairBtnText: {
+    color: colors.bg,
+    fontWeight: '700',
+    fontSize: 16,
+  },
 });
