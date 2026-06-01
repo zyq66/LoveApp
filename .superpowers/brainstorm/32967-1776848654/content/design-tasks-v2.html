@@ -1,0 +1,63 @@
+<h2>设计 A1 · 今日小任务（简化版）</h2>
+<p class="subtitle">纯展示，无打卡，每天换一个</p>
+
+<div class="section">
+  <h3>首页 Widget</h3>
+  <div style="max-width:300px;background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px">
+
+    <!-- Days counter mock -->
+    <div style="text-align:center;padding:12px 0">
+      <div style="font-size:11px;color:rgba(255,255,255,0.4)">在一起的第</div>
+      <div style="font-size:56px;font-weight:800;color:white;line-height:1">365</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4)">天</div>
+    </div>
+
+    <!-- Task Widget -->
+    <div style="background:#0d1a0d;border:1px solid #1e3a1e;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="color:#4ade80;font-size:11px;font-weight:700">✦ 今日小任务</span>
+        <!-- 刷新按钮，点击 AI 重新生成 -->
+        <span style="color:rgba(255,255,255,0.3);font-size:16px">↻</span>
+      </div>
+      <div style="color:white;font-size:15px;line-height:1.6">今天睡前，给对方发一条语音 🎙</div>
+    </div>
+
+    <div style="color:rgba(255,255,255,0.3);font-size:11px;text-align:center">纪念日 ↓</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>数据逻辑（无需新集合）</h3>
+  <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;font-size:13px;color:#e2e8f0;line-height:1.8">
+    <div style="color:#4ade80;font-size:11px;margin-bottom:8px">两人看到同一个任务的方案</div>
+    <div>1. 用 <span style="color:#93c5fd">日期字符串</span>（"2026-04-22"）作为固定题库的下标取模</div>
+    <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-left:12px;margin-bottom:6px">→ 两人日期相同，看到一样的题，无需数据库</div>
+    <div>2. 点 <span style="color:#93c5fd">↻</span> 刷新时调 AI 生成新任务（当天不持久化，只刷 state）</div>
+    <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-left:12px">→ 刷新后两人任务可能不同，但任务本来就是建议性质，OK</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>需要改的文件</h3>
+  <div style="background:#0a0a14;border-radius:10px;padding:14px;font-size:13px;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#1a2e1a;border:1px solid #4ade80;border-radius:6px;padding:1px 8px;color:#4ade80;font-size:11px;white-space:nowrap">新建</span>
+      <span style="color:#e2e8f0">src/components/DailyTaskWidget.tsx</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#1a2e1a;border:1px solid #4ade80;border-radius:6px;padding:1px 8px;color:#4ade80;font-size:11px;white-space:nowrap">修改</span>
+      <span style="color:#e2e8f0">ai.ts — 新增 generateDailyTask()</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#1a2e1a;border:1px solid #4ade80;border-radius:6px;padding:1px 8px;color:#4ade80;font-size:11px;white-space:nowrap">修改</span>
+      <span style="color:#e2e8f0">HomeScreen.tsx — 引入 DailyTaskWidget</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#16213e;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:1px 8px;color:rgba(255,255,255,0.6);font-size:11px;white-space:nowrap">TCB</span>
+      <span style="color:#e2e8f0">ai-proxy 云函数新增 'task' type</span>
+    </div>
+  </div>
+  <p style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:8px">✓ 不需要新建数据库集合</p>
+</div>
+
+<p class="subtitle" style="margin-top:20px">OK 吗？确认后看最后一个功能 →</p>

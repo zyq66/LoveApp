@@ -1,0 +1,46 @@
+<h2>设计 A1 · 今日小任务（最终版）</h2>
+<p class="subtitle">纯展示，固定题库，日期取模，无 AI、无刷新、无打卡</p>
+
+<div class="section">
+  <h3>首页 Widget</h3>
+  <div style="max-width:300px;background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px">
+    <div style="text-align:center;padding:12px 0">
+      <div style="font-size:11px;color:rgba(255,255,255,0.4)">在一起的第</div>
+      <div style="font-size:56px;font-weight:800;color:white;line-height:1">365</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4)">天</div>
+    </div>
+    <div style="background:#0d1a0d;border:1px solid #1e3a1e;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="color:#4ade80;font-size:11px;font-weight:700;margin-bottom:8px">✦ 今日小任务</div>
+      <div style="color:white;font-size:15px;line-height:1.6">今天睡前，给对方发一条语音 🎙</div>
+    </div>
+    <div style="color:rgba(255,255,255,0.3);font-size:11px;text-align:center">纪念日 ↓</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>实现逻辑</h3>
+  <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;font-family:monospace;font-size:13px;color:#e2e8f0">
+    <div style="color:#4ade80;margin-bottom:6px">// 无网络请求，纯本地</div>
+    <div><span style="color:#93c5fd">const</span> idx = <span style="color:#fbbf24">Math.floor</span>(Date.now() / 86400000) % TASKS.length</div>
+    <div><span style="color:#93c5fd">const</span> todayTask = TASKS[idx]</div>
+    <div style="margin-top:8px;color:rgba(255,255,255,0.4);font-size:11px">// 两人日期相同 → 看到同一个任务</div>
+    <div style="color:rgba(255,255,255,0.4);font-size:11px">// 内置 ~40 个任务，超过 40 天自动循环</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>需要改的文件</h3>
+  <div style="background:#0a0a14;border-radius:10px;padding:14px;font-size:13px;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#1a2e1a;border:1px solid #4ade80;border-radius:6px;padding:1px 8px;color:#4ade80;font-size:11px;white-space:nowrap">新建</span>
+      <span style="color:#e2e8f0">src/components/DailyTaskWidget.tsx — 题库 + 渲染逻辑全在组件内</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#16213e;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:1px 8px;color:rgba(255,255,255,0.6);font-size:11px;white-space:nowrap">修改</span>
+      <span style="color:#e2e8f0">HomeScreen.tsx — 在天数下方引入 DailyTaskWidget</span>
+    </div>
+  </div>
+  <p style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:8px">✓ 不需要数据库 · 不需要云函数 · 不消耗 AI 额度</p>
+</div>
+
+<p class="subtitle" style="margin-top:20px">确认后看最后一个功能（语音消息）→</p>

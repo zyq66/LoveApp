@@ -7,7 +7,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../store/AuthContext';
-import { db } from '../config/cloudbase';
 import { getProfile, saveProfile, Profile, DEFAULT_PROFILE } from '../services/profile';
 import { DatePicker } from '../components/DatePicker';
 import { colors, spacing } from '../theme';
@@ -185,12 +184,14 @@ const tagStyles = StyleSheet.create({
 // ── Main Screen ───────────────────────────────────────────────────────────────
 
 export function ProfileScreen() {
-  const { userId, coupleId, gender } = useAuth();
+  const { userId, coupleId, gender, partner } = useAuth();
   const [profile, setProfile] = useState<Profile>({ ...DEFAULT_PROFILE });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [partnerAvatar, setPartnerAvatar] = useState('');
-  const [partnerNickname, setPartnerNickname] = useState('');
+
+  // 派生：实时跟随伴侣文档
+  const partnerAvatar = partner?.avatarUrl ?? '';
+  const partnerNickname = partner?.nickname || 'TA';
 
   // pickers / editors
   const [showBirthdayPicker, setShowBirthdayPicker] = useState(false);
@@ -214,24 +215,8 @@ export function ProfileScreen() {
   async function load() {
     setLoading(true);
     try {
-      const [p, coupleRes] = await Promise.all([
-        getProfile(userId!),
-        db.collection('couples').doc(coupleId!).get(),
-      ]);
-      setProfile(p);
-
-      const coupleData = ((coupleRes as any).data as any[])?.[0];
-      if (coupleData) {
-        const partnerId = coupleData.user1 === userId ? coupleData.user2 : coupleData.user1;
-        if (partnerId) {
-          const partnerRes: any = await db.collection('users').doc(partnerId).get();
-          const partnerData = (partnerRes.data as any[])?.[0];
-          if (partnerData) {
-            setPartnerAvatar(partnerData.avatarUrl || '');
-            setPartnerNickname(partnerData.nickname || 'TA');
-          }
-        }
-      }
+      setProfile(await getProfile(userId!));
+      // partner 头像/昵称由 AuthContext 实时提供，不再手动 fetch
     } finally {
       setLoading(false);
     }
@@ -264,6 +249,20 @@ export function ProfileScreen() {
     : 0;
 
   const zodiac = zodiacFromDate(profile.birthday);
+
+  if (!coupleId) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
+          <Text style={{ fontSize: 40, marginBottom: 16 }}>💑</Text>
+          <Text style={{ fontSize: 16, color: colors.white, fontWeight: '700', marginBottom: 8 }}>还未配对</Text>
+          <Text style={{ fontSize: 13, color: colors.whiteSecondary, textAlign: 'center' }}>
+            请先去首页完成配对，才能查看和编辑 TA 的档案
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (loading) {
     return (

@@ -5,11 +5,14 @@ import {
 } from 'react-native';
 import { Photo } from '../services/album';
 import { colors, spacing } from '../theme';
+import { usePhotoAspectRatios } from './usePhotoAspectRatios';
 
 interface Props {
   photos: Photo[];
   userId: string;
   onReact: (photo: Photo, emoji: string) => void;
+  onOpen: (photo: Photo) => void;
+  onDelete: (photo: Photo) => void;
 }
 
 const REACTION_EMOJIS = ['❤️', '😂', '😮', '😢', '👍', '🌸'];
@@ -27,8 +30,14 @@ function groupByMonth(photos: Photo[]): { label: string; items: Photo[] }[] {
 
 const IMG_SIZE = Dimensions.get('window').width - spacing.lg * 2;
 
-export function PhotoTimeline({ photos, userId, onReact }: Props) {
+function timelineImageHeight(ratio: number): number {
+  const naturalHeight = IMG_SIZE / Math.max(ratio, 0.25);
+  return Math.min(Math.max(naturalHeight, 180), 560);
+}
+
+export function PhotoTimeline({ photos, userId, onReact, onOpen, onDelete }: Props) {
   const [actionTarget, setActionTarget] = useState<Photo | null>(null);
+  const ratios = usePhotoAspectRatios(photos);
   const groups = groupByMonth(photos);
 
   if (groups.length === 0) {
@@ -60,11 +69,22 @@ export function PhotoTimeline({ photos, userId, onReact }: Props) {
                 <Pressable
                   key={photo.id}
                   style={styles.photoCard}
+                  onPress={() => onOpen(photo)}
                   onLongPress={() => setActionTarget(photo)}
                   delayLongPress={400}
                 >
                   <View style={{ position: 'relative' }}>
-                    <Image source={{ uri: photo.url }} style={[styles.image, { width: IMG_SIZE }]} />
+                    <Image
+                      source={{ uri: photo.url }}
+                      style={[
+                        styles.image,
+                        {
+                          width: IMG_SIZE,
+                          height: timelineImageHeight(ratios[photo.id] ?? 1),
+                        },
+                      ]}
+                      resizeMode="contain"
+                    />
                     {/* 上传者角标 */}
                     <View style={[styles.avatarBadge, isMe ? styles.avatarBadgeMe : styles.avatarBadgeThem]}>
                       <Text style={styles.avatarBadgeText}>{isMe ? '我' : 'TA'}</Text>
@@ -114,6 +134,18 @@ export function PhotoTimeline({ photos, userId, onReact }: Props) {
                 </TouchableOpacity>
               ))}
             </View>
+            {actionTarget?.uploadedBy === userId && (
+              <TouchableOpacity
+                style={styles.deleteAction}
+                onPress={() => {
+                  const target = actionTarget;
+                  setActionTarget(null);
+                  if (target) onDelete(target);
+                }}
+              >
+                <Text style={styles.deleteActionText}>撤回发布</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </Pressable>
       </Modal>
@@ -131,7 +163,7 @@ const styles = StyleSheet.create({
   monthLabel: { fontSize: 13, color: colors.whiteSecondary, fontWeight: '600' },
   monthLabelGreen: { color: colors.green },
   photoCard: { paddingHorizontal: spacing.lg, marginBottom: spacing.md },
-  image: { aspectRatio: 1, borderRadius: 12, backgroundColor: colors.whiteDim },
+  image: { borderRadius: 12, backgroundColor: colors.whiteDim },
   caption: { color: colors.white, fontSize: 14, marginTop: spacing.sm },
   dateLine: { color: colors.whiteSecondary, fontSize: 11, marginTop: 4 },
   uploadMe: { color: colors.green },
@@ -173,4 +205,15 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   reactionEmojiText: { fontSize: 24 },
+  deleteAction: {
+    alignSelf: 'center',
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(248,113,113,0.55)',
+    backgroundColor: 'rgba(248,113,113,0.12)',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  deleteActionText: { color: '#fca5a5', fontSize: 13, fontWeight: '700' },
 });

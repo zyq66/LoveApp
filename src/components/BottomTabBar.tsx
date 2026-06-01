@@ -8,7 +8,7 @@ const TABS = [
   { key: 'Home', label: '首页', icon: '🏠' },
   { key: 'Album', label: '相册', icon: '📷' },
   { key: 'Letter', label: '情书', icon: '💌', fab: true },
-  { key: 'Moments', label: '时光', icon: '✨' },
+  { key: 'Calendar', label: '日历', icon: '🗓' },
   { key: 'Profile', label: '档案', icon: '💝' },
   { key: 'More', label: '更多', icon: '⋯' },
 ];

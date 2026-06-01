@@ -1,0 +1,15 @@
+{"type":"server-started","port":53986,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:53986","screen_dir":"/Users/edy/Desktop/LoveLetter/.superpowers/brainstorm/32967-1776848654/content","state_dir":"/Users/edy/Desktop/LoveLetter/.superpowers/brainstorm/32967-1776848654/state"}
+{"type":"screen-added","file":"/Users/edy/Desktop/LoveLetter/.superpowers/brainstorm/32967-1776848654/content/features-overview.html"}
+{"source":"user-event","type":"click","text":"A1\n      \n        首页 Widget 样式\n        首页底部新增一个卡片区域，显示今日任务 + 双方打卡进度（我打卡了 / TA 还没打卡）。完成后绿色高亮。\n        \n          ✦ 今日任务\n          今晚睡前给对方发一条语音 🎙\n          \n            ✓ 我已完成\n            TA 还没…","choice":"a1","id":null,"timestamp":1776848863628}
+{"source":"user-event","type":"click","text":"B1\n      \n        按住录音（微信风格）\n        输入栏加麦克风按钮，按住录音松开发送，有波形动画，气泡显示时长 + 播放按钮。\n        \n          \n            ▶\n            \n              \n              \n              \n              \n              \n              \n              \n            \n            0:12","choice":"b1","id":null,"timestamp":1776848877456}
+{"source":"user-event","type":"click","text":"C2\n      \n        独立「心情」Tab 页\n        底部导航「更多」改成「心情」，专门展示双方心情日历（用 emoji 标注每天）和历史 mood 走势。\n        \n          \n            一二三四五六日\n            😊😌🥳😢🥰😊😌\n            🥰😊😌🥳😊😊·","choice":"c2","id":null,"timestamp":1776848889820}
+{"source":"user-event","type":"click","text":"D1\n      \n        头像角标 + 点赞\n        每张照片右下角显示上传者头像（小圆圈），长按可点 ❤️ 赞。时间轴上显示\"TA 上传了这张\"。\n        \n          \n            👤\n            ❤️ 2\n          \n          \n            👤","choice":"d1","id":null,"timestamp":1776848891787}
+{"source":"user-event","type":"click","text":"C2\n      \n        独立「心情」Tab 页\n        底部导航「更多」改成「心情」，专门展示双方心情日历（用 emoji 标注每天）和历史 mood 走势。\n        \n          \n            一二三四五六日\n            😊😌🥳😢🥰😊😌\n            🥰😊😌🥳😊😊·","choice":"c2","id":null,"timestamp":1776848900851}
+{"type":"screen-added","file":"/Users/edy/Desktop/LoveLetter/.superpowers/brainstorm/32967-1776848654/content/waiting-1.html"}
+{"type":"screen-added","file":"/Users/edy/Desktop/LoveLetter/.superpowers/brainstorm/32967-1776848654/content/design-album.html"}
+{"type":"screen-added","file":"/Users/edy/Desktop/LoveLetter/.superpowers/brainstorm/32967-1776848654/content/design-tasks.html"}
+{"type":"screen-added","file":"/Users/edy/Desktop/LoveLetter/.superpowers/brainstorm/32967-1776848654/content/design-tasks-v2.html"}
+{"type":"screen-added","file":"/Users/edy/Desktop/LoveLetter/.superpowers/brainstorm/32967-1776848654/content/design-tasks-v3.html"}
+{"type":"screen-added","file":"/Users/edy/Desktop/LoveLetter/.superpowers/brainstorm/32967-1776848654/content/design-tasks-v4.html"}
+{"type":"screen-added","file":"/Users/edy/Desktop/LoveLetter/.superpowers/brainstorm/32967-1776848654/content/design-voice.html"}
+{"type":"server-stopped","reason":"idle timeout"}

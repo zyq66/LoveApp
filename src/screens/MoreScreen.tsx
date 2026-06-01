@@ -34,15 +34,14 @@ function formatDisplayDate(ms: number): string {
 }
 
 export function MoreScreen() {
-  const { userId, coupleId, gender, setAuth, clearAuth } = useAuth();
+  const { userId, coupleId, gender, user, couple, clearAuth } = useAuth();
 
-  // Profile
-  const [avatarUrl, setAvatarUrl] = useState("");
+  // 派生数据：直接从 AuthContext 拿
+  const avatarUrl = user?.avatarUrl ?? '';
+  const currentNickname = user?.nickname ?? '';
+  const startDate = couple?.startDate ?? 0;
+
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [currentNickname, setCurrentNickname] = useState("");
-
-  // Together date
-  const [startDate, setStartDate] = useState(0);
   const [showStartPicker, setShowStartPicker] = useState(false);
 
   // Anniversaries
@@ -57,28 +56,7 @@ export function MoreScreen() {
   const [nickname, setNickname] = useState("");
 
   useEffect(() => {
-    if (!userId) return;
-    db.collection("users")
-      .doc(userId)
-      .get()
-      .then((res: any) => {
-        const u = (res.data as any[])?.[0];
-        if (u) {
-          setAvatarUrl(u.avatarUrl || "");
-          setCurrentNickname(u.nickname || "");
-        }
-      });
-  }, [userId]);
-
-  useEffect(() => {
     if (!coupleId) return;
-    db.collection("couples")
-      .doc(coupleId)
-      .get()
-      .then((res: any) => {
-        const c = (res.data as any[])?.[0];
-        if (c) setStartDate(c.startDate || 0);
-      });
     getAnniversaries(coupleId).then(setAnniversaries);
   }, [coupleId]);
 
@@ -101,7 +79,7 @@ export function MoreScreen() {
       const uri = result.assets[0].uri;
       const url = await uploadImage(uri, "avatars");
       await db.collection("users").doc(userId!).update({ avatarUrl: url });
-      setAvatarUrl(url);
+      // user watch 自动推送，UI 自动刷新
       Alert.alert("头像已更新");
     } catch (e: any) {
       Alert.alert("上传失败", e.message);
@@ -115,7 +93,7 @@ export function MoreScreen() {
     if (!userId || !nickname.trim()) return;
     const trimmed = nickname.trim();
     await db.collection("users").doc(userId).update({ nickname: trimmed });
-    setCurrentNickname(trimmed);
+    // user watch 自动推送
     setNicknameModal(false);
     setNickname("");
   }
@@ -124,9 +102,8 @@ export function MoreScreen() {
   async function handleStartDateChange(date: Date) {
     setShowStartPicker(false);
     if (!coupleId) return;
-    const ts = date.getTime();
-    await db.collection("couples").doc(coupleId).update({ startDate: ts });
-    setStartDate(ts);
+    await db.collection("couples").doc(coupleId).update({ startDate: date.getTime() });
+    // couple watch 自动推送
   }
 
   // ── Anniversaries ─────────────────────────────────────────
@@ -171,7 +148,7 @@ export function MoreScreen() {
         onPress: async () => {
           if (!coupleId || !userId) return;
           await unbindCouple(userId, coupleId);
-          clearAuth();
+          // user watch 推送 coupleId='' 后 HomeScreen 自动切回配对卡片
         },
       },
     ]);
@@ -238,7 +215,7 @@ export function MoreScreen() {
                     .collection("users")
                     .doc(userId!)
                     .update({ gender: "male" });
-                  setAuth(userId!, coupleId!, "male");
+                  // user watch 自动推送 gender 变化
                 }}
               >
                 <Text
@@ -260,7 +237,7 @@ export function MoreScreen() {
                     .collection("users")
                     .doc(userId!)
                     .update({ gender: "female" });
-                  setAuth(userId!, coupleId!, "female");
+                  // user watch 自动推送 gender 变化
                 }}
               >
                 <Text
@@ -276,80 +253,84 @@ export function MoreScreen() {
           </View>
         </View>
 
-        {/* 情侣 */}
-        <Text style={styles.sectionTitle}>情侣</Text>
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.row}
-            onPress={() => setShowStartPicker(true)}
-          >
-            <Text style={styles.rowLabel}>在一起的日期</Text>
-            <View style={styles.rowRight}>
-              <Text style={styles.rowValue}>
-                {formatDisplayDate(startDate)}
-              </Text>
-              <Text style={styles.rowArrow}>›</Text>
+        {/* 情侣 — only shown when paired */}
+        {coupleId ? (
+          <>
+            <Text style={styles.sectionTitle}>情侣</Text>
+            <View style={styles.section}>
+              <TouchableOpacity
+                style={styles.row}
+                onPress={() => setShowStartPicker(true)}
+              >
+                <Text style={styles.rowLabel}>在一起的日期</Text>
+                <View style={styles.rowRight}>
+                  <Text style={styles.rowValue}>
+                    {formatDisplayDate(startDate)}
+                  </Text>
+                  <Text style={styles.rowArrow}>›</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.row, styles.rowLast]}
+                onPress={handleUnbind}
+              >
+                <Text style={[styles.rowLabel, styles.danger]}>解绑情侣</Text>
+                <Text style={styles.rowArrow}>›</Text>
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.row, styles.rowLast]}
-            onPress={handleUnbind}
-          >
-            <Text style={[styles.rowLabel, styles.danger]}>解绑情侣</Text>
-            <Text style={styles.rowArrow}>›</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* 纪念日 */}
-        <View style={styles.annHeader}>
-          <Text style={styles.sectionTitle}>纪念日</Text>
-          <TouchableOpacity
-            style={styles.annAddBtn}
-            onPress={() => setAnnModal(true)}
-          >
-            <Text style={styles.annAddBtnText}>＋ 添加</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.section}>
-          {anniversaries.length === 0 ? (
-            <View style={styles.row}>
-              <Text style={styles.rowValue}>还没有纪念日</Text>
+            {/* 纪念日 */}
+            <View style={styles.annHeader}>
+              <Text style={styles.sectionTitle}>纪念日</Text>
+              <TouchableOpacity
+                style={styles.annAddBtn}
+                onPress={() => setAnnModal(true)}
+              >
+                <Text style={styles.annAddBtnText}>＋ 添加</Text>
+              </TouchableOpacity>
             </View>
-          ) : (
-            anniversaries.map((a, i) => {
-              const daysLeft = Math.ceil((a.date - Date.now()) / 86400000);
-              const label =
-                daysLeft === 0
-                  ? "今天 🎉"
-                  : daysLeft > 0
-                  ? `${daysLeft} 天后`
-                  : `${Math.abs(daysLeft)} 天前`;
-              const urgent = daysLeft >= 0 && daysLeft <= 7;
-              return (
-                <TouchableOpacity
-                  key={a.id}
-                  style={[
-                    styles.row,
-                    i === anniversaries.length - 1 && styles.rowLast,
-                  ]}
-                  onLongPress={() => handleDeleteAnniversary(a)}
-                  delayLongPress={500}
-                >
-                  <Text style={styles.rowLabel}>{a.name}</Text>
-                  <View style={styles.rowRight}>
-                    <Text
-                      style={[styles.rowValue, urgent && styles.rowValueUrgent]}
+            <View style={styles.section}>
+              {anniversaries.length === 0 ? (
+                <View style={styles.row}>
+                  <Text style={styles.rowValue}>还没有纪念日</Text>
+                </View>
+              ) : (
+                anniversaries.map((a, i) => {
+                  const daysLeft = Math.ceil((a.date - Date.now()) / 86400000);
+                  const label =
+                    daysLeft === 0
+                      ? "今天 🎉"
+                      : daysLeft > 0
+                      ? `${daysLeft} 天后`
+                      : `${Math.abs(daysLeft)} 天前`;
+                  const urgent = daysLeft >= 0 && daysLeft <= 7;
+                  return (
+                    <TouchableOpacity
+                      key={a.id}
+                      style={[
+                        styles.row,
+                        i === anniversaries.length - 1 && styles.rowLast,
+                      ]}
+                      onLongPress={() => handleDeleteAnniversary(a)}
+                      delayLongPress={500}
                     >
-                      {label}
-                    </Text>
-                    <Text style={styles.rowArrow}>⋯</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })
-          )}
-        </View>
-        <Text style={styles.annHint}>长按纪念日可删除</Text>
+                      <Text style={styles.rowLabel}>{a.name}</Text>
+                      <View style={styles.rowRight}>
+                        <Text
+                          style={[styles.rowValue, urgent && styles.rowValueUrgent]}
+                        >
+                          {label}
+                        </Text>
+                        <Text style={styles.rowArrow}>⋯</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })
+              )}
+            </View>
+            <Text style={styles.annHint}>长按纪念日可删除</Text>
+          </>
+        ) : null}
 
         {/* 其他 */}
         <Text style={styles.sectionTitle}>其他</Text>

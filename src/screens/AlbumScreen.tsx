@@ -7,9 +7,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../store/AuthContext';
-import { uploadPhoto, fetchPhotos, addPhotoReaction, removePhotoReaction, Photo } from '../services/album';
+import {
+  uploadPhoto, fetchPhotos, watchPhotos, addPhotoReaction,
+  removePhotoReaction, deletePhoto, Photo,
+} from '../services/album';
 import { PhotoTimeline } from '../components/PhotoTimeline';
 import { PhotoGrid } from '../components/PhotoGrid';
+import { PhotoPreviewModal } from '../components/PhotoPreviewModal';
 import { colors, spacing } from '../theme';
 
 type ViewMode = 'timeline' | 'grid';
@@ -23,8 +27,17 @@ export function AlbumScreen() {
   const [captionModal, setCaptionModal] = useState(false);
   const [pendingUri, setPendingUri] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
+  const [previewPhoto, setPreviewPhoto] = useState<Photo | null>(null);
 
-  async function loadPhotos() {
+  // 实时监听：watch 推送 + 后台/网络异常时自愈重连
+  useEffect(() => {
+    if (!coupleId) return;
+    const unsub = watchPhotos(coupleId, setPhotos);
+    return unsub;
+  }, [coupleId]);
+
+  // 下拉刷新：兜底，watch 短暂失联时也能强制拉一次
+  async function refreshPhotos() {
     if (!coupleId) return;
     setRefreshing(true);
     try {
@@ -33,8 +46,6 @@ export function AlbumScreen() {
       setRefreshing(false);
     }
   }
-
-  useEffect(() => { loadPhotos(); }, [coupleId]);
 
   async function handlePickPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -57,7 +68,7 @@ export function AlbumScreen() {
     setUploading(true);
     try {
       await uploadPhoto(coupleId, userId, pendingUri, caption.trim());
-      await loadPhotos();
+      // watch 会自动推送新照片，无需手动 reload
     } catch (e: any) {
       Alert.alert('上传失败', e.message);
     } finally {
@@ -81,7 +92,31 @@ export function AlbumScreen() {
     } else {
       await addPhotoReaction(photo.id, userId, emoji);
     }
-    await loadPhotos();
+    // watch 会自动推送 reaction 更新
+  }
+
+  function handleDeletePhoto(photo: Photo) {
+    if (!coupleId || !userId) return;
+    if (photo.uploadedBy !== userId) {
+      Alert.alert('不能撤回', '只能撤回自己发布的照片');
+      return;
+    }
+    Alert.alert('撤回发布', '撤回后这张照片会从相册中移除，确定吗？', [
+      { text: '取消', style: 'cancel' },
+      {
+        text: '撤回',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deletePhoto(coupleId, photo.id, userId);
+            setPhotos(prev => prev.filter(p => p.id !== photo.id));
+            setPreviewPhoto(current => (current?.id === photo.id ? null : current));
+          } catch (e: any) {
+            Alert.alert('撤回失败', e?.message || String(e));
+          }
+        },
+      },
+    ]);
   }
 
   return (
@@ -109,11 +144,27 @@ export function AlbumScreen() {
       {/* Photo list */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadPhotos} tintColor={colors.green} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshPhotos} tintColor={colors.green} />}
       >
         {mode === 'timeline'
-          ? <PhotoTimeline photos={photos} userId={userId ?? ''} onReact={handleReact} />
-          : <PhotoGrid photos={photos} userId={userId ?? ''} onReact={handleReact} />
+          ? (
+            <PhotoTimeline
+              photos={photos}
+              userId={userId ?? ''}
+              onReact={handleReact}
+              onOpen={setPreviewPhoto}
+              onDelete={handleDeletePhoto}
+            />
+          )
+          : (
+            <PhotoGrid
+              photos={photos}
+              userId={userId ?? ''}
+              onReact={handleReact}
+              onOpen={setPreviewPhoto}
+              onDelete={handleDeletePhoto}
+            />
+          )
         }
       </ScrollView>
 
@@ -151,6 +202,13 @@ export function AlbumScreen() {
           </View>
         </View>
       </Modal>
+
+      <PhotoPreviewModal
+        photo={previewPhoto}
+        userId={userId ?? ''}
+        onClose={() => setPreviewPhoto(null)}
+        onDelete={handleDeletePhoto}
+      />
     </SafeAreaView>
   );
 }

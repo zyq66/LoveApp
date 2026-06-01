@@ -1,0 +1,163 @@
+<h2>四个新功能 — 设计方向确认</h2>
+<p class="subtitle">每个功能有 2 种实现风格，选你更喜欢的方向</p>
+
+<div class="section">
+  <h3>A · 今日小任务</h3>
+  <div class="options">
+    <div class="option" data-choice="a1" onclick="toggleSelect(this)">
+      <div class="letter">A1</div>
+      <div class="content">
+        <h3>首页 Widget 样式</h3>
+        <p>首页底部新增一个卡片区域，显示今日任务 + 双方打卡进度（我打卡了 / TA 还没打卡）。完成后绿色高亮。</p>
+        <div style="margin-top:12px;background:#0a0a14;border:1px solid #1e3a2a;border-radius:12px;padding:12px;font-size:13px;color:#e2e8f0">
+          <div style="color:#4ade80;font-size:11px;margin-bottom:6px">✦ 今日任务</div>
+          <div style="font-size:14px;margin-bottom:8px">今晚睡前给对方发一条语音 🎙</div>
+          <div style="display:flex;gap:12px">
+            <span style="background:#1a2e1a;border:1px solid #4ade80;border-radius:16px;padding:3px 10px;color:#4ade80;font-size:12px">✓ 我已完成</span>
+            <span style="background:#16213e;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:3px 10px;color:rgba(255,255,255,0.4);font-size:12px">TA 还没…</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="option" data-choice="a2" onclick="toggleSelect(this)">
+      <div class="letter">A2</div>
+      <div class="content">
+        <h3>独立页 / 弹出卡片</h3>
+        <p>首页天数大字下方加一个小入口按钮，点击展开全屏卡片，展示任务详情、历史完成记录、连续打卡天数。</p>
+        <div style="margin-top:12px;background:#0a0a14;border:1px solid #1e3a2a;border-radius:12px;padding:12px;font-size:13px;color:#e2e8f0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="color:#4ade80;font-size:11px">✦ 今日任务</span>
+            <span style="color:rgba(255,255,255,0.4);font-size:11px">连续 7 天 🔥</span>
+          </div>
+          <div style="font-size:14px;margin-bottom:10px">今晚睡前给对方发一条语音 🎙</div>
+          <div style="background:#4ade80;border-radius:8px;padding:8px;text-align:center;color:#0a0a14;font-weight:700;font-size:13px">完成打卡</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>B · 语音消息</h3>
+  <div class="options">
+    <div class="option" data-choice="b1" onclick="toggleSelect(this)">
+      <div class="letter">B1</div>
+      <div class="content">
+        <h3>按住录音（微信风格）</h3>
+        <p>输入栏加麦克风按钮，按住录音松开发送，有波形动画，气泡显示时长 + 播放按钮。</p>
+        <div style="margin-top:12px;background:#0a0a14;border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px">
+          <div style="background:#4ade80;border-radius:16px;padding:6px 16px;display:flex;align-items:center;gap:8px">
+            <span style="color:#0a0a14">▶</span>
+            <div style="display:flex;gap:2px;align-items:center">
+              <div style="width:2px;height:8px;background:#0a0a14;border-radius:1px"></div>
+              <div style="width:2px;height:14px;background:#0a0a14;border-radius:1px"></div>
+              <div style="width:2px;height:6px;background:#0a0a14;border-radius:1px"></div>
+              <div style="width:2px;height:18px;background:#0a0a14;border-radius:1px"></div>
+              <div style="width:2px;height:10px;background:#0a0a14;border-radius:1px"></div>
+              <div style="width:2px;height:16px;background:#0a0a14;border-radius:1px"></div>
+              <div style="width:2px;height:8px;background:#0a0a14;border-radius:1px"></div>
+            </div>
+            <span style="color:#0a0a14;font-size:12px">0:12</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="option" data-choice="b2" onclick="toggleSelect(this)">
+      <div class="letter">B2</div>
+      <div class="content">
+        <h3>点击录音（点开始/点结束）</h3>
+        <p>点麦克风进入录音模式，屏幕显示录音中动画，再点停止并发送。操作更明确，不怕误触。</p>
+        <div style="margin-top:12px;background:#0a0a14;border-radius:12px;padding:16px;text-align:center">
+          <div style="width:60px;height:60px;border-radius:30px;background:rgba(74,222,128,0.15);border:2px solid #4ade80;display:flex;align-items:center;justify-content:center;margin:0 auto 8px">
+            <span style="font-size:24px">🎙</span>
+          </div>
+          <div style="color:#4ade80;font-size:13px">录音中 0:08</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:4px">点击停止并发送</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>C · 心情日记</h3>
+  <div class="options">
+    <div class="option" data-choice="c1" onclick="toggleSelect(this)">
+      <div class="letter">C1</div>
+      <div class="content">
+        <h3>首页双人心情 Widget</h3>
+        <p>首页头像下面展示今日双方各自的心情 emoji + 一句话。点击可记录/修改今天的心情。历史记录在独立弹窗里。</p>
+        <div style="margin-top:12px;background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px">
+          <div style="display:flex;justify-content:space-around">
+            <div style="text-align:center">
+              <div style="font-size:28px">😊</div>
+              <div style="font-size:11px;color:#4ade80;margin-top:4px">我 · 开心</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">今天发工资了！</div>
+            </div>
+            <div style="width:1px;background:rgba(255,255,255,0.1)"></div>
+            <div style="text-align:center">
+              <div style="font-size:28px">🥰</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">TA · 思念</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">想你了~</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="option" data-choice="c2" onclick="toggleSelect(this)">
+      <div class="letter">C2</div>
+      <div class="content">
+        <h3>独立「心情」Tab 页</h3>
+        <p>底部导航「更多」改成「心情」，专门展示双方心情日历（用 emoji 标注每天）和历史 mood 走势。</p>
+        <div style="margin-top:12px;background:#0a0a14;border-radius:12px;padding:10px">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">
+            <span style="font-size:9px;color:rgba(255,255,255,0.3)">一</span><span style="font-size:9px;color:rgba(255,255,255,0.3)">二</span><span style="font-size:9px;color:rgba(255,255,255,0.3)">三</span><span style="font-size:9px;color:rgba(255,255,255,0.3)">四</span><span style="font-size:9px;color:rgba(255,255,255,0.3)">五</span><span style="font-size:9px;color:rgba(255,255,255,0.3)">六</span><span style="font-size:9px;color:rgba(255,255,255,0.3)">日</span>
+            <span style="font-size:14px">😊</span><span style="font-size:14px">😌</span><span style="font-size:14px">🥳</span><span style="font-size:14px">😢</span><span style="font-size:14px">🥰</span><span style="font-size:14px">😊</span><span style="font-size:14px">😌</span>
+            <span style="font-size:14px">🥰</span><span style="font-size:14px">😊</span><span style="font-size:14px">😌</span><span style="font-size:14px">🥳</span><span style="font-size:14px">😊</span><span style="background:#1a2e1a;border-radius:6px;padding:1px;font-size:14px">😊</span><span style="font-size:14px;color:rgba(255,255,255,0.2)">·</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>D · 相册协作感</h3>
+  <div class="options">
+    <div class="option" data-choice="d1" onclick="toggleSelect(this)">
+      <div class="letter">D1</div>
+      <div class="content">
+        <h3>头像角标 + 点赞</h3>
+        <p>每张照片右下角显示上传者头像（小圆圈），长按可点 ❤️ 赞。时间轴上显示"TA 上传了这张"。</p>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <div style="position:relative;width:80px;height:80px;background:#16213e;border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
+            <div style="position:absolute;bottom:4px;right:4px;width:22px;height:22px;border-radius:11px;background:#4ade80;border:2px solid #0a0a14;display:flex;align-items:center;justify-content:center;font-size:10px">👤</div>
+            <div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.6);border-radius:8px;padding:1px 5px;font-size:10px;color:white">❤️ 2</div>
+          </div>
+          <div style="position:relative;width:80px;height:80px;background:#1a2333;border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
+            <div style="position:absolute;bottom:4px;right:4px;width:22px;height:22px;border-radius:11px;background:#f9a8d4;border:2px solid #0a0a14;display:flex;align-items:center;justify-content:center;font-size:10px">👤</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="option" data-choice="d2" onclick="toggleSelect(this)">
+      <div class="letter">D2</div>
+      <div class="content">
+        <h3>时间轴强化：分组 + 统计</h3>
+        <p>时间轴按月分组，每月顶部显示"本月 X 张 · 你上传 N 张 · TA 上传 M 张"，更有仪式感。</p>
+        <div style="margin-top:12px;background:#0a0a14;border-radius:10px;padding:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="color:#4ade80;font-size:12px;font-weight:700">2026 年 4 月</span>
+            <span style="color:rgba(255,255,255,0.4);font-size:11px">共 12 张</span>
+          </div>
+          <div style="display:flex;gap:12px;font-size:11px;color:rgba(255,255,255,0.5)">
+            <span>你上传 7 张</span>
+            <span>TA 上传 5 张</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px">每个功能可以多选，选完后在终端告诉我 ✓</p>

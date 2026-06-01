@@ -1,0 +1,124 @@
+<h2>设计 A1 · 今日小任务</h2>
+<p class="subtitle">首页 Widget，AI 生成 + 固定题库兜底</p>
+
+<div class="section">
+  <h3>首页位置</h3>
+  <div style="max-width:300px;background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;font-size:13px">
+
+    <!-- Header mock -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="color:rgba(255,255,255,0.3);font-size:11px">LoveLetter</span>
+      <span style="color:rgba(255,255,255,0.3);font-size:18px">⚙</span>
+    </div>
+
+    <!-- Days counter -->
+    <div style="text-align:center;padding:16px 0">
+      <div style="font-size:11px;color:rgba(255,255,255,0.4)">在一起的第</div>
+      <div style="font-size:56px;font-weight:800;color:white;line-height:1">365</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.4)">天 ♡ 2025年4月22日相恋</div>
+    </div>
+
+    <!-- Avatars -->
+    <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px">
+      <div style="text-align:center">
+        <div style="width:48px;height:48px;border-radius:24px;background:#1a3a2e;border:2px solid #4ade80;margin:0 auto 4px"></div>
+        <span style="font-size:11px;color:#4ade80">我</span>
+      </div>
+      <div style="font-size:24px;color:#4ade80;align-self:center">♥</div>
+      <div style="text-align:center">
+        <div style="width:48px;height:48px;border-radius:24px;background:#2a1e3a;border:2px solid rgba(255,255,255,0.2);margin:0 auto 4px"></div>
+        <span style="font-size:11px;color:rgba(255,255,255,0.5)">TA</span>
+      </div>
+    </div>
+
+    <!-- Task Widget ← 新增这块 -->
+    <div style="background:#0d1a0d;border:1px solid #1e3a1e;border-radius:12px;padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="color:#4ade80;font-size:11px;font-weight:700">✦ 今日小任务</span>
+        <span style="color:rgba(255,255,255,0.3);font-size:10px">每天一个</span>
+      </div>
+      <div style="color:white;font-size:14px;margin-bottom:10px;line-height:1.5">今天睡前，给对方发一条语音 🎙</div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:#1a3a1a;border:1px solid #4ade80;border-radius:8px;padding:6px;text-align:center">
+          <span style="color:#4ade80;font-size:12px;font-weight:600">✓ 我完成了</span>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px;text-align:center">
+          <span style="color:rgba(255,255,255,0.3);font-size:12px">TA 还没…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Anniversary -->
+    <div style="color:rgba(255,255,255,0.3);font-size:11px;text-align:center">纪念日 ↓</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>数据模型</h3>
+  <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;font-family:monospace;font-size:13px;color:#e2e8f0">
+    <div style="color:#4ade80;margin-bottom:8px">// daily_tasks 集合</div>
+    <div><span style="color:#93c5fd">coupleId</span><span style="color:rgba(255,255,255,0.4)">: string</span></div>
+    <div><span style="color:#93c5fd">date</span><span style="color:rgba(255,255,255,0.4)">: string  </span><span style="color:rgba(255,255,255,0.3);font-size:11px">// "2026-04-22"</span></div>
+    <div><span style="color:#93c5fd">content</span><span style="color:rgba(255,255,255,0.4)">: string  </span><span style="color:rgba(255,255,255,0.3);font-size:11px">// 任务文字</span></div>
+    <div><span style="color:#93c5fd">checkins</span><span style="color:rgba(255,255,255,0.4)">: string[]  </span><span style="color:rgba(255,255,255,0.3);font-size:11px">// [userId, ...]</span></div>
+    <div style="margin-top:12px;color:#4ade80">// 逻辑：每天第一个打开 App 的人触发生成</div>
+    <div style="color:rgba(255,255,255,0.4)">// 先查当日是否已有 → 有就用，没有就 AI 生成并写入</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>打卡状态变化</h3>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;min-width:130px">
+      <div style="color:#4ade80;font-size:10px;margin-bottom:6px">初始状态</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:5px 8px;text-align:center;font-size:11px;color:rgba(255,255,255,0.4)">我 — 未完成</div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:5px 8px;text-align:center;font-size:11px;color:rgba(255,255,255,0.4)">TA — 未完成</div>
+      </div>
+    </div>
+    <div style="color:rgba(255,255,255,0.3);font-size:20px;align-self:center">→</div>
+    <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;min-width:130px">
+      <div style="color:#4ade80;font-size:10px;margin-bottom:6px">我打卡后</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="background:#1a3a1a;border:1px solid #4ade80;border-radius:6px;padding:5px 8px;text-align:center;font-size:11px;color:#4ade80">✓ 我完成了</div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:5px 8px;text-align:center;font-size:11px;color:rgba(255,255,255,0.4)">TA 还没…</div>
+      </div>
+    </div>
+    <div style="color:rgba(255,255,255,0.3);font-size:20px;align-self:center">→</div>
+    <div style="background:#0a0a14;border:1px solid #4ade80;border-radius:10px;padding:12px;min-width:130px">
+      <div style="color:#4ade80;font-size:10px;margin-bottom:6px">双方都完成 🎉</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="background:#1a3a1a;border:1px solid #4ade80;border-radius:6px;padding:5px 8px;text-align:center;font-size:11px;color:#4ade80">✓ 我完成了</div>
+        <div style="background:#1a3a1a;border:1px solid #4ade80;border-radius:6px;padding:5px 8px;text-align:center;font-size:11px;color:#4ade80">✓ TA 也完成了</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>需要改的文件</h3>
+  <div style="background:#0a0a14;border-radius:10px;padding:14px;font-size:13px;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#1a2e1a;border:1px solid #4ade80;border-radius:6px;padding:1px 8px;color:#4ade80;font-size:11px;white-space:nowrap">新建</span>
+      <span style="color:#e2e8f0">src/services/tasks.ts — 获取/生成今日任务、打卡</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#1a2e1a;border:1px solid #4ade80;border-radius:6px;padding:1px 8px;color:#4ade80;font-size:11px;white-space:nowrap">新建</span>
+      <span style="color:#e2e8f0">src/components/DailyTaskWidget.tsx — 独立组件</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#16213e;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:1px 8px;color:rgba(255,255,255,0.6);font-size:11px;white-space:nowrap">修改</span>
+      <span style="color:#e2e8f0">HomeScreen.tsx — 引入 DailyTaskWidget</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#16213e;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:1px 8px;color:rgba(255,255,255,0.6);font-size:11px;white-space:nowrap">TCB</span>
+      <span style="color:#e2e8f0">控制台新建 daily_tasks 集合，权限同其他集合</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#16213e;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:1px 8px;color:rgba(255,255,255,0.6);font-size:11px;white-space:nowrap">TCB</span>
+      <span style="color:#e2e8f0">ai-proxy 云函数新增 'task' type 处理</span>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:20px">这个设计看起来 OK 吗？确认后进入最后一个功能 →</p>

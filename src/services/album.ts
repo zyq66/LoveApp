@@ -1,5 +1,6 @@
 import { db, authReady } from '../config/cloudbase';
 import { uploadImage } from './storage';
+import { watchCollection } from './realtime';
 
 export interface Photo {
   id: string;
@@ -43,6 +44,28 @@ export async function removePhotoReaction(photoId: string, userId: string): Prom
   });
 }
 
-export async function deletePhoto(coupleId: string, photoId: string): Promise<void> {
+export async function deletePhoto(coupleId: string, photoId: string, userId?: string): Promise<void> {
+  await authReady;
+  if (userId) {
+    const res: any = await db.collection('photos').doc(photoId).get();
+    const photo = ((res.data as any[]) ?? [])[0];
+    if (!photo || photo.coupleId !== coupleId) throw new Error('照片不存在');
+    if (photo.uploadedBy !== userId) throw new Error('只能撤回自己发布的照片');
+  }
   await db.collection('photos').doc(photoId).remove();
+}
+
+export function watchPhotos(
+  coupleId: string,
+  onChange: (photos: Photo[]) => void,
+): () => void {
+  return watchCollection<Photo>({
+    buildQuery: () => db.collection('photos').where({ coupleId }),
+    mapper: (d: any) => ({ reactions: {}, ...d, id: d._id }) as Photo,
+    onChange: (photos) => {
+      photos.sort((a, b) => b.date - a.date);
+      onChange(photos);
+    },
+    debugLabel: 'watchPhotos',
+  });
 }

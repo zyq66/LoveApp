@@ -5,11 +5,14 @@ import {
 } from 'react-native';
 import { Photo } from '../services/album';
 import { colors, spacing } from '../theme';
+import { usePhotoAspectRatios } from './usePhotoAspectRatios';
 
 interface Props {
   photos: Photo[];
   userId: string;
   onReact: (photo: Photo, emoji: string) => void;
+  onOpen: (photo: Photo) => void;
+  onDelete: (photo: Photo) => void;
 }
 
 const REACTION_EMOJIS = ['❤️', '😂', '😮', '😢', '👍', '🌸'];
@@ -18,10 +21,15 @@ const SCREEN_W = Dimensions.get('window').width;
 const COL_GAP = spacing.sm;
 const H_PAD = spacing.lg;
 const COL_W = (SCREEN_W - H_PAD * 2 - COL_GAP) / 2;
-const HEIGHTS = [COL_W * 1.2, COL_W * 0.8, COL_W, COL_W * 1.4, COL_W * 0.9];
 
-export function PhotoGrid({ photos, userId, onReact }: Props) {
+function gridImageHeight(ratio: number): number {
+  const naturalHeight = COL_W / Math.max(ratio, 0.35);
+  return Math.min(Math.max(naturalHeight, 120), 300);
+}
+
+export function PhotoGrid({ photos, userId, onReact, onOpen, onDelete }: Props) {
   const [actionTarget, setActionTarget] = useState<Photo | null>(null);
+  const ratios = usePhotoAspectRatios(photos);
 
   if (photos.length === 0) {
     return (
@@ -35,9 +43,9 @@ export function PhotoGrid({ photos, userId, onReact }: Props) {
   const right: Photo[] = [];
   photos.forEach((p, i) => (i % 2 === 0 ? left : right).push(p));
 
-  function renderColumn(items: Photo[], offset: number) {
+  function renderColumn(items: Photo[]) {
     return items.map((photo, i) => {
-      const h = HEIGHTS[(offset + i) % HEIGHTS.length];
+      const h = gridImageHeight(ratios[photo.id] ?? 1);
       const isMe = photo.uploadedBy === userId;
       const reactionEntries = Object.entries(photo.reactions ?? {}).filter(([, v]) => v !== '');
       const counts: Record<string, number> = {};
@@ -48,11 +56,16 @@ export function PhotoGrid({ photos, userId, onReact }: Props) {
         <Pressable
           key={photo.id}
           style={[styles.item, { marginBottom: COL_GAP }]}
+          onPress={() => onOpen(photo)}
           onLongPress={() => setActionTarget(photo)}
           delayLongPress={400}
         >
           <View style={{ position: 'relative' }}>
-            <Image source={{ uri: photo.url }} style={[styles.image, { height: h }]} />
+            <Image
+              source={{ uri: photo.url }}
+              style={[styles.image, { height: h }]}
+              resizeMode="contain"
+            />
             {/* 上传者角标 */}
             <View style={[styles.avatarBadge, isMe ? styles.avatarBadgeMe : styles.avatarBadgeThem]}>
               <Text style={styles.avatarBadgeText}>{isMe ? '我' : 'TA'}</Text>
@@ -74,10 +87,10 @@ export function PhotoGrid({ photos, userId, onReact }: Props) {
     <>
       <View style={styles.row}>
         <View style={[styles.col, { marginRight: COL_GAP / 2 }]}>
-          {renderColumn(left, 0)}
+          {renderColumn(left)}
         </View>
         <View style={[styles.col, { marginLeft: COL_GAP / 2 }]}>
-          {renderColumn(right, 2)}
+          {renderColumn(right)}
         </View>
       </View>
 
@@ -99,6 +112,18 @@ export function PhotoGrid({ photos, userId, onReact }: Props) {
                 </TouchableOpacity>
               ))}
             </View>
+            {actionTarget?.uploadedBy === userId && (
+              <TouchableOpacity
+                style={styles.deleteAction}
+                onPress={() => {
+                  const target = actionTarget;
+                  setActionTarget(null);
+                  if (target) onDelete(target);
+                }}
+              >
+                <Text style={styles.deleteActionText}>撤回发布</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </Pressable>
       </Modal>
@@ -146,4 +171,15 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   reactionEmoji: { fontSize: 24 },
+  deleteAction: {
+    alignSelf: 'center',
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(248,113,113,0.55)',
+    backgroundColor: 'rgba(248,113,113,0.12)',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  deleteActionText: { color: '#fca5a5', fontSize: 13, fontWeight: '700' },
 });

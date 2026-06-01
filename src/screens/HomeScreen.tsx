@@ -1,5 +1,5 @@
 // src/screens/HomeScreen.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView,
   Modal, TextInput, Image, ActivityIndicator,
@@ -8,28 +8,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { DatePicker } from '../components/DatePicker';
 import { generateAnniversaryWish } from '../services/ai';
-import * as Notifications from 'expo-notifications';
 import { useAuth } from '../store/AuthContext';
 import {
   getAnniversaries, addAnniversary, deleteAnniversary, Anniversary,
 } from '../services/anniversaries';
-import { db } from '../config/cloudbase';
+import { getNotificationsModule } from '../services/notifications';
 import * as Clipboard from 'expo-clipboard';
 import { pairCouple } from '../services/auth';
 import { colors, spacing } from '../theme';
 import { DailyTaskWidget } from '../components/DailyTaskWidget';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
 async function scheduleAnniversaryNotifications(anniversaries: Anniversary[]) {
+  const Notifications = getNotificationsModule();
+  if (!Notifications) return;
   const { status } = await Notifications.requestPermissionsAsync();
   if (status !== 'granted') return;
   await Notifications.cancelAllScheduledNotificationsAsync();
@@ -57,39 +48,32 @@ function daysLeftLabel(date: number): { text: string; urgent: boolean } {
 }
 
 export function HomeScreen() {
-  const { userId, coupleId, gender, setAuth } = useAuth();
-  const [myCode, setMyCode] = useState('');
+  const { userId, coupleId, user, partner, couple } = useAuth();
   const [partnerCodeInput, setPartnerCodeInput] = useState('');
   const [pairLoading, setPairLoading] = useState(false);
-  const [daysTogether, setDaysTogether] = useState(0);
-  const [startDate, setStartDate] = useState(0);
   const [anniversaries, setAnniversaries] = useState<Anniversary[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [inputName, setInputName] = useState('');
   const [annPickerDate, setAnnPickerDate] = useState(new Date());
   const [showAnnPicker, setShowAnnPicker] = useState(false);
 
-  const [myAvatar, setMyAvatar] = useState('');
-  const [partnerAvatar, setPartnerAvatar] = useState('');
-  const [myNickname, setMyNickname] = useState('');
-  const [partnerNickname, setPartnerNickname] = useState('');
-
-  useEffect(() => {
-    if (coupleId || !userId) return;
-    db.collection('users').doc(userId).get().then((res: any) => {
-      const user = (res.data as any[])?.[0];
-      if (user?.code) setMyCode(user.code);
-    }).catch((e: any) => {
-      console.error('fetch myCode error', e);
-    });
-  }, [coupleId, userId]);
+  // 派生数据：全部由 AuthContext 实时推送
+  const myCode = user?.code ?? '';
+  const myAvatar = user?.avatarUrl ?? '';
+  const myNickname = user?.nickname ?? '';
+  const partnerAvatar = partner?.avatarUrl ?? '';
+  const partnerNickname = partner?.nickname ?? '';
+  const startDate = couple?.startDate ?? 0;
+  const daysTogether = startDate > 0
+    ? Math.max(0, Math.floor((Date.now() - startDate) / 86400000))
+    : 0;
 
   async function handlePair() {
     if (partnerCodeInput.length < 4 || !userId) return;
     setPairLoading(true);
     try {
-      const newCoupleId = await pairCouple(userId, partnerCodeInput);
-      setAuth(userId, newCoupleId, gender ?? 'male');
+      await pairCouple(userId, partnerCodeInput);
+      // user 文档 watch 自动同步 coupleId，UI 自动切换
     } catch (e: any) {
       Alert.alert('配对失败', e.message);
     } finally {
@@ -103,41 +87,15 @@ export function HomeScreen() {
   const [wishText, setWishText] = useState('');
   const [wishLoading, setWishLoading] = useState(false);
 
-  // 每次切回首页都重新拉取所有数据（在一起日期、头像、昵称、纪念日）
+  // 纪念日列表 + 通知调度（user/partner/couple 数据由 AuthContext 直接提供）
   useFocusEffect(
     React.useCallback(() => {
-      if (!coupleId || !userId) return;
-
-      db.collection('couples').doc(coupleId).get().then(async (coupleRes: any) => {
-        const coupleList = coupleRes.data as any[];
-        if (!coupleList || coupleList.length === 0) return;
-        const data = coupleList[0];
-        const days = Math.floor((Date.now() - data.startDate) / 86400000);
-        setDaysTogether(Math.max(0, days));
-        setStartDate(data.startDate || 0);
-
-        const partnerId = data.user1 === userId ? data.user2 : data.user1;
-        const [myRes, partnerRes] = await Promise.all([
-          db.collection('users').doc(userId).get(),
-          partnerId ? db.collection('users').doc(partnerId).get() : Promise.resolve(null),
-        ]);
-        const myData = ((myRes as any)?.data as any[])?.[0];
-        if (myData) {
-          setMyAvatar(myData.avatarUrl || '');
-          setMyNickname(myData.nickname || '');
-        }
-        const partnerData = ((partnerRes as any)?.data as any[])?.[0];
-        if (partnerData) {
-          setPartnerAvatar(partnerData.avatarUrl || '');
-          setPartnerNickname(partnerData.nickname || '');
-        }
-      });
-
+      if (!coupleId) return;
       getAnniversaries(coupleId).then(list => {
         setAnniversaries(list);
         scheduleAnniversaryNotifications(list);
       });
-    }, [coupleId, userId])
+    }, [coupleId])
   );
 
   function closeModal() {
@@ -239,8 +197,8 @@ export function HomeScreen() {
           </View>
         )}
 
-        {/* ── Hero Section ── */}
-        <View style={styles.hero}>
+        {/* ── Hero Section (only when paired) ── */}
+        {coupleId && <View style={styles.hero}>
 
           {/* Decorative dots */}
           <View style={styles.dotsRow}>
@@ -291,12 +249,12 @@ export function HomeScreen() {
               ♡  自 {formatStartDate(startDate)} 相恋至今
             </Text>
           )}
-        </View>
+        </View>}
 
-      <DailyTaskWidget />
+      {coupleId && <DailyTaskWidget />}
 
-        {/* ── Anniversary Section ── */}
-        <View style={styles.section}>
+        {/* ── Anniversary Section (only when paired) ── */}
+        {coupleId && <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>纪念日</Text>
             <TouchableOpacity style={styles.addCircleBtn} onPress={() => setModalVisible(true)}>
@@ -335,7 +293,7 @@ export function HomeScreen() {
               })}
             </ScrollView>
           )}
-        </View>
+        </View>}
 
       </ScrollView>
 

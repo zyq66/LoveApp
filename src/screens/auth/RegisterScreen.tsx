@@ -18,7 +18,7 @@ export function RegisterScreen({ navigation }: any) {
     try {
       const { userId } = await register(phone, password, gender);
       // 注册后直接进入主页（coupleId 为空，首页显示配对卡片）
-      setAuth(userId, '', gender);
+      setAuth(userId, gender);
     } catch (e: any) {
       Alert.alert('注册失败', e.message);
     } finally {

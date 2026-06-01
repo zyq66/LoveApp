@@ -1,0 +1,123 @@
+<h2>设计 B1 · 语音消息</h2>
+<p class="subtitle">按住录音，最长 20 秒，松开发送</p>
+
+<div class="section">
+  <h3>输入栏变化</h3>
+  <div style="max-width:340px">
+    <!-- 普通状态 -->
+    <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;margin-bottom:12px">
+      <div style="color:#4ade80;font-size:10px;margin-bottom:6px">普通状态</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="width:36px;height:36px;border-radius:18px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:16px">✨</div>
+        <div style="width:36px;height:36px;border-radius:18px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:16px">🖼</div>
+        <!-- 新增麦克风按钮 -->
+        <div style="width:36px;height:36px;border-radius:18px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:16px">🎙</div>
+        <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:18px;padding:8px 12px;color:rgba(255,255,255,0.3);font-size:14px;border:1px solid rgba(255,255,255,0.1)">写点什么…</div>
+        <div style="width:38px;height:38px;border-radius:19px;background:#4ade80;display:flex;align-items:center;justify-content:center;opacity:0.4">➤</div>
+      </div>
+    </div>
+
+    <!-- 录音中状态 -->
+    <div style="background:#0a0a14;border:1px solid #4ade80;border-radius:12px;padding:10px">
+      <div style="color:#4ade80;font-size:10px;margin-bottom:6px">按住🎙录音中</div>
+      <div style="background:#0d1a0d;border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px">
+        <!-- 录音动画 -->
+        <div style="width:36px;height:36px;border-radius:18px;background:rgba(74,222,128,0.2);border:2px solid #4ade80;display:flex;align-items:center;justify-content:center;font-size:18px">🎙</div>
+        <!-- 波形 -->
+        <div style="flex:1;display:flex;align-items:center;gap:3px;height:28px">
+          <div style="width:3px;background:#4ade80;border-radius:2px;height:40%;opacity:0.6"></div>
+          <div style="width:3px;background:#4ade80;border-radius:2px;height:70%"></div>
+          <div style="width:3px;background:#4ade80;border-radius:2px;height:55%"></div>
+          <div style="width:3px;background:#4ade80;border-radius:2px;height:90%"></div>
+          <div style="width:3px;background:#4ade80;border-radius:2px;height:45%"></div>
+          <div style="width:3px;background:#4ade80;border-radius:2px;height:80%"></div>
+          <div style="width:3px;background:#4ade80;border-radius:2px;height:60%"></div>
+          <div style="width:3px;background:#4ade80;border-radius:2px;height:35%"></div>
+          <div style="width:3px;background:#4ade80;border-radius:2px;height:75%"></div>
+          <div style="width:3px;background:#4ade80;border-radius:2px;height:50%"></div>
+        </div>
+        <!-- 计时 -->
+        <div style="color:#4ade80;font-size:14px;font-weight:700;min-width:32px">0:08</div>
+      </div>
+      <div style="color:rgba(255,255,255,0.3);font-size:11px;text-align:center;margin-top:6px">松开发送 · 上滑取消</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>语音气泡样式</h3>
+  <div style="display:flex;flex-direction:column;gap:10px;max-width:300px">
+    <!-- 我发的 -->
+    <div style="display:flex;justify-content:flex-end;align-items:flex-end;gap:8px">
+      <div style="background:#4ade80;border-radius:18px 4px 18px 18px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:16px;color:#0a0a14">▶</span>
+        <div style="display:flex;gap:2px;align-items:center;height:20px">
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:40%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:80%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:55%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:100%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:65%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:45%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:75%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:35%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:90%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:50%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:60%"></div>
+          <div style="width:2px;background:#0a0a14;border-radius:1px;height:70%"></div>
+        </div>
+        <span style="font-size:13px;color:#0a0a14;font-weight:600">0:12</span>
+      </div>
+    </div>
+    <!-- TA 发的 -->
+    <div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:8px">
+      <div style="background:#16213e;border-radius:4px 18px 18px 18px;padding:10px 14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,0.1)">
+        <span style="font-size:16px;color:white">▶</span>
+        <div style="display:flex;gap:2px;align-items:center;height:20px">
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:60%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:40%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:90%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:55%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:75%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:35%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:80%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:50%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:65%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:45%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:70%"></div>
+          <div style="width:2px;background:rgba(255,255,255,0.5);border-radius:1px;height:30%"></div>
+        </div>
+        <span style="font-size:13px;color:rgba(255,255,255,0.7)">0:07</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>技术方案</h3>
+  <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;font-size:13px;line-height:1.8;color:#e2e8f0">
+    <div style="display:flex;gap:8px;margin-bottom:6px"><span style="color:#4ade80">📦</span><span><span style="color:#93c5fd">expo-av</span> — 录音 + 播放，Expo 生态，无需额外配置</span></div>
+    <div style="display:flex;gap:8px;margin-bottom:6px"><span style="color:#4ade80">☁️</span><span>录音文件上传 TCB 云存储 <span style="color:rgba(255,255,255,0.4)">voice/</span> 文件夹</span></div>
+    <div style="display:flex;gap:8px;margin-bottom:6px"><span style="color:#4ade80">💬</span><span>messages 集合新增 <span style="color:#93c5fd">type: 'voice'</span>，字段加 <span style="color:#93c5fd">voiceUrl</span> + <span style="color:#93c5fd">duration</span></span></div>
+    <div style="display:flex;gap:8px"><span style="color:#4ade80">⏱</span><span>20 秒倒计时，到时自动停止录音并发送</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>需要改的文件</h3>
+  <div style="background:#0a0a14;border-radius:10px;padding:14px;font-size:13px;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#1a2e1a;border:1px solid #4ade80;border-radius:6px;padding:1px 8px;color:#4ade80;font-size:11px;white-space:nowrap">修改</span>
+      <span style="color:#e2e8f0">letters.ts — 新增 sendVoice()，字段扩展</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#1a2e1a;border:1px solid #4ade80;border-radius:6px;padding:1px 8px;color:#4ade80;font-size:11px;white-space:nowrap">修改</span>
+      <span style="color:#e2e8f0">LetterScreen.tsx — 麦克风按钮、录音逻辑、语音气泡渲染</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#16213e;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:1px 8px;color:rgba(255,255,255,0.6);font-size:11px;white-space:nowrap">安装</span>
+      <span style="color:#e2e8f0">npx expo install expo-av</span>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:20px">三个功能设计全部完成，确认后我来写 spec 文档 →</p>

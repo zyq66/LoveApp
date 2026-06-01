@@ -1,0 +1,77 @@
+<h2>设计 A1 · 今日小任务（定稿）</h2>
+<p class="subtitle">AI 生成，AsyncStorage 日缓存，无刷新，无打卡</p>
+
+<div class="section">
+  <h3>首页 Widget</h3>
+  <div style="max-width:300px;background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px">
+    <div style="text-align:center;padding:12px 0">
+      <div style="font-size:11px;color:rgba(255,255,255,0.4)">在一起的第</div>
+      <div style="font-size:56px;font-weight:800;color:white;line-height:1">365</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4)">天</div>
+    </div>
+    <div style="background:#0d1a0d;border:1px solid #1e3a1e;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="color:#4ade80;font-size:11px;font-weight:700;margin-bottom:8px">✦ 今日小任务</div>
+      <div style="color:white;font-size:15px;line-height:1.6">今晚给 TA 发一张你觉得自己最好看的照片 📸</div>
+    </div>
+    <div style="color:rgba(255,255,255,0.3);font-size:11px;text-align:center">纪念日 ↓</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>任务内容分级</h3>
+  <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+    <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px">
+      <div style="color:#4ade80;font-size:11px;margin-bottom:6px">温馨日常（约 40%）</div>
+      <div style="color:rgba(255,255,255,0.7)">"今天夸对方一个你从没说过的优点" / "给 TA 发一首今天想到的歌"</div>
+    </div>
+    <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px">
+      <div style="color:#f9a8d4;font-size:11px;margin-bottom:6px">甜蜜撒娇（约 35%）</div>
+      <div style="color:rgba(255,255,255,0.7)">"今晚语音通话至少 10 分钟" / "给 TA 发一张你今天的自拍"</div>
+    </div>
+    <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px">
+      <div style="color:#fbbf24;font-size:11px;margin-bottom:6px">亲密挑逗（约 25%）</div>
+      <div style="color:rgba(255,255,255,0.7)">"发一张今天的腿照给 TA" / "描述一个你最近想和 TA 做的事"</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>生成 + 缓存逻辑</h3>
+  <div style="background:#0a0a14;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;font-family:monospace;font-size:12px;color:#e2e8f0;line-height:1.8">
+    <div style="color:#4ade80">// App 加载时</div>
+    <div><span style="color:#93c5fd">const</span> cacheKey = <span style="color:#fbbf24">`task_${today}`</span></div>
+    <div><span style="color:#93c5fd">const</span> cached = <span style="color:#fbbf24">await</span> AsyncStorage.getItem(cacheKey)</div>
+    <div><span style="color:#93c5fd">if</span> (cached) <span style="color:#93c5fd">return</span> cached  <span style="color:rgba(255,255,255,0.3)">// 当天已有，直接用</span></div>
+    <div style="margin-top:4px"><span style="color:#93c5fd">try</span> {</div>
+    <div style="padding-left:16px"><span style="color:#93c5fd">const</span> task = <span style="color:#fbbf24">await</span> callAI(<span style="color:#fbbf24">'task'</span>, ...)</div>
+    <div style="padding-left:16px">AsyncStorage.setItem(cacheKey, task)</div>
+    <div style="padding-left:16px"><span style="color:#93c5fd">return</span> task</div>
+    <div>} <span style="color:#93c5fd">catch</span> {</div>
+    <div style="padding-left:16px"><span style="color:#93c5fd">return</span> FALLBACK_TASKS[dayIndex % FALLBACK_TASKS.length]</div>
+    <div>}</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>需要改的文件</h3>
+  <div style="background:#0a0a14;border-radius:10px;padding:14px;font-size:13px;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#1a2e1a;border:1px solid #4ade80;border-radius:6px;padding:1px 8px;color:#4ade80;font-size:11px;white-space:nowrap">新建</span>
+      <span style="color:#e2e8f0">src/components/DailyTaskWidget.tsx</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#16213e;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:1px 8px;color:rgba(255,255,255,0.6);font-size:11px;white-space:nowrap">修改</span>
+      <span style="color:#e2e8f0">ai.ts — 新增 generateDailyTask()，含分级 prompt</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#16213e;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:1px 8px;color:rgba(255,255,255,0.6);font-size:11px;white-space:nowrap">修改</span>
+      <span style="color:#e2e8f0">HomeScreen.tsx — 引入 DailyTaskWidget，纪念日上方</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#16213e;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:1px 8px;color:rgba(255,255,255,0.6);font-size:11px;white-space:nowrap">TCB</span>
+      <span style="color:#e2e8f0">ai-proxy 云函数新增 'task' type</span>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:20px">确认后看最后一个功能（语音消息）→</p>

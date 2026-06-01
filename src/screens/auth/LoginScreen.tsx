@@ -14,8 +14,9 @@ export function LoginScreen({ navigation }: any) {
     if (!phone || !password) return Alert.alert('请填写手机号和密码');
     setLoading(true);
     try {
-      const { userId, coupleId, gender } = await login(phone, password);
-      setAuth(userId, coupleId, gender);
+      const { userId, gender } = await login(phone, password);
+      // coupleId 由 user 文档 watch 自动推送
+      setAuth(userId, gender);
     } catch (e: any) {
       Alert.alert('登录失败', e.message);
     } finally {

@@ -4,20 +4,17 @@ import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, KeyboardAvoidingView, Platform,
   Image, Modal, ActivityIndicator, Pressable,
-  PanResponder, Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../store/AuthContext';
 import {
-  sendLetter, sendImage, sendVoice, listenLetters, markRead,
+  sendLetter, sendImage, listenLetters, markRead,
   addReaction, deleteLetter, Letter,
 } from '../services/letters';
 import { generateLoveLetter, analyzeMood, generateDailyTopic } from '../services/ai';
 import { uploadImage } from '../services/storage';
 import { colors, spacing } from '../theme';
-import { Audio } from 'expo-av';
-import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 
 const MOODS = [
   { emoji: '😊', label: '开心' },
@@ -72,79 +69,6 @@ export function LetterScreen() {
   const [mood, setMood] = useState('😊');
   const [imgUploading, setImgUploading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
-
-  // Voice recorder
-  const { state: recState, start: startRec, stop: stopRec } = useVoiceRecorder();
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const micDragY = useRef(new Animated.Value(0)).current;
-
-  const micPanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        micDragY.setValue(0);
-        startRec(async (result) => {
-          if (!result || !coupleId || !userId) return;
-          try {
-            const url = await uploadImage(result.uri, 'voice');
-            await sendVoice(coupleId, userId, url, result.duration, mood);
-          } catch (e) {
-            console.error('voice send error', e);
-          }
-        });
-      },
-      onPanResponderMove: Animated.event([null, { dy: micDragY }], { useNativeDriver: false }),
-      onPanResponderRelease: (_, gs) => {
-        micDragY.setValue(0);
-        if (gs.dy < -50) {
-          stopRec(true);  // cancel
-        } else {
-          stopRec(false); // send
-        }
-      },
-      onPanResponderTerminate: () => {
-        micDragY.setValue(0);
-        stopRec(true);
-      },
-    })
-  ).current;
-
-  async function handlePlayVoice(letter: Letter) {
-    if (!letter.voiceUrl) return;
-
-    // stop current playback
-    if (soundRef.current) {
-      await soundRef.current.stopAsync();
-      await soundRef.current.unloadAsync();
-      soundRef.current = null;
-    }
-
-    if (playingId === letter.id) {
-      setPlayingId(null);
-      return;
-    }
-
-    try {
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: letter.voiceUrl },
-        { shouldPlay: true },
-      );
-      soundRef.current = sound;
-      setPlayingId(letter.id);
-      sound.setOnPlaybackStatusUpdate(status => {
-        if (status.isLoaded && status.didJustFinish) {
-          setPlayingId(null);
-          sound.unloadAsync();
-          soundRef.current = null;
-        }
-      });
-    } catch (e) {
-      console.error('voice play error', e);
-      setPlayingId(null);
-    }
-  }
 
   // Action menu (long press)
   const [actionTarget, setActionTarget] = useState<Letter | null>(null);
@@ -344,23 +268,6 @@ export function LetterScreen() {
           </View>
         )}
 
-        {/* Recording overlay */}
-        {recState.isRecording && (
-          <View style={styles.recordingOverlay}>
-            <View style={styles.recordingInner}>
-              <Text style={styles.recordingMic}>🎙</Text>
-              <View style={styles.waveRow}>
-                {[40, 70, 55, 90, 45, 80, 60, 35, 75, 50].map((h, i) => (
-                  <View key={i} style={[styles.wavebar, { height: h * 0.28 }]} />
-                ))}
-              </View>
-              <Text style={styles.recordingTimer}>
-                0:{String(recState.elapsed).padStart(2, '0')}
-              </Text>
-            </View>
-            <Text style={styles.recordingHint}>松开发送 · 上滑取消</Text>
-          </View>
-        )}
 
         {/* Messages */}
         <ScrollView
@@ -428,30 +335,6 @@ export function LetterScreen() {
                             source={{ uri: letter.imageUrl }}
                             style={[styles.imgBubble, isMe ? styles.imgBubbleMe : styles.imgBubbleThem]}
                           />
-                        ) : letter.type === 'voice' && letter.voiceUrl ? (
-                          <TouchableOpacity
-                            style={[styles.voiceBubble, isMe ? styles.bubbleMe : styles.bubbleThem]}
-                            onPress={() => handlePlayVoice(letter)}
-                          >
-                            <Text style={[styles.voicePlayIcon, isMe && styles.voicePlayIconMe]}>
-                              {playingId === letter.id ? '⏹' : '▶'}
-                            </Text>
-                            <View style={styles.voiceWaveRow}>
-                              {[40, 80, 55, 100, 65, 45, 75, 35, 90, 50, 70, 30].map((h, i) => (
-                                <View
-                                  key={i}
-                                  style={[
-                                    styles.voiceWavebar,
-                                    isMe ? styles.voiceWavebarMe : styles.voiceWavebarThem,
-                                    { height: h * 0.2 },
-                                  ]}
-                                />
-                              ))}
-                            </View>
-                            <Text style={[styles.voiceDuration, isMe && styles.voiceDurationMe]}>
-                              0:{String(letter.duration ?? 0).padStart(2, '0')}
-                            </Text>
-                          </TouchableOpacity>
                         ) : (
                           <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
                             <Text style={[styles.bubbleText, isMe && styles.bubbleTextMe]}>
@@ -501,14 +384,6 @@ export function LetterScreen() {
                 : <Text style={styles.imgBtnIcon}>🖼</Text>
               }
             </TouchableOpacity>
-            {/* Microphone button */}
-            <Animated.View
-              style={[styles.imgBtn, recState.isRecording && styles.imgBtnRecording]}
-              {...micPanResponder.panHandlers}
-            >
-              <Text style={styles.imgBtnIcon}>🎙</Text>
-            </Animated.View>
-
             <TextInput
               style={styles.input}
               placeholder="写点什么…"
@@ -814,90 +689,4 @@ const styles = StyleSheet.create({
   },
   actionDeleteText: { color: '#f87171', fontSize: 15 },
 
-  // Microphone button recording state
-  imgBtnRecording: {
-    backgroundColor: 'rgba(74,222,128,0.2)',
-    borderColor: colors.green,
-    borderWidth: 2,
-  },
-
-  // Recording overlay
-  recordingOverlay: {
-    position: 'absolute',
-    bottom: 90,
-    left: spacing.lg,
-    right: spacing.lg,
-    backgroundColor: '#0d1a0d',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.greenBorder,
-    padding: spacing.md,
-    zIndex: 100,
-  },
-  recordingInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  recordingMic: { fontSize: 22 },
-  waveRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    height: 28,
-  },
-  wavebar: {
-    width: 3,
-    backgroundColor: colors.green,
-    borderRadius: 2,
-  },
-  recordingTimer: {
-    color: colors.green,
-    fontSize: 14,
-    fontWeight: '700',
-    minWidth: 32,
-    textAlign: 'right',
-  },
-  recordingHint: {
-    color: colors.whiteSecondary,
-    fontSize: 11,
-    textAlign: 'center',
-    marginTop: 6,
-  },
-
-  // Voice bubble
-  voiceBubble: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-    minWidth: 140,
-  },
-  voicePlayIcon: {
-    fontSize: 16,
-    color: colors.white,
-  },
-  voicePlayIconMe: { color: colors.bg },
-  voiceWaveRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    height: 20,
-  },
-  voiceWavebar: {
-    width: 2,
-    borderRadius: 1,
-  },
-  voiceWavebarMe: { backgroundColor: 'rgba(10,10,20,0.6)' },
-  voiceWavebarThem: { backgroundColor: 'rgba(255,255,255,0.5)' },
-  voiceDuration: {
-    fontSize: 13,
-    color: colors.whiteSecondary,
-    fontWeight: '600',
-  },
-  voiceDurationMe: { color: 'rgba(10,10,20,0.7)' },
 });
