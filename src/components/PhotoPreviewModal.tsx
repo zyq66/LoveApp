@@ -36,7 +36,7 @@ export function PhotoPreviewModal({ photo, userId, onClose, onDelete }: Props) {
 
         <Pressable style={styles.imageWrap} onPress={onClose}>
           {photo ? (
-            <Image source={{ uri: photo.url }} style={styles.image} resizeMode="contain" />
+            <Image source={{ uri: photo.originalUrl || photo.url }} style={styles.image} resizeMode="contain" />
           ) : null}
         </Pressable>
 
@@ -44,7 +44,7 @@ export function PhotoPreviewModal({ photo, userId, onClose, onDelete }: Props) {
           <View style={styles.footer}>
             {photo.caption ? <Text style={styles.caption}>{photo.caption}</Text> : null}
             <Text style={styles.meta}>
-              {formatDate(photo.date)}
+              {formatDate(photo.shotAt)}
               {' · '}
               {isOwner ? '我上传' : 'TA上传'}
             </Text>

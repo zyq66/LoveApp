@@ -1,18 +1,12 @@
 // src/store/AuthContext.tsx
 //
-// 全局登录态 + 当前用户 / 伴侣 / couple 文档的实时订阅
-//
-// 之前的实现：
-//   - HomeScreen 用 5s 轮询检测自己被配对
-//   - HomeScreen / MoreScreen / ProfileScreen 各自手动 fetch users.doc(userId)
-//   - 改头像/昵称后只能手动同步
-//
-// 现在：AuthContext 内 watch 三层数据（自己 → couple → 伴侣），
-// 任何一方变更（被配对、改头像、改昵称、解绑）自动推送到所有屏幕。
+// 本机身份 + 当前成员 / 伴侣 / 双人空间的实时订阅。
+// 界面没有账号登录；首次选择身份后，沿用历史 userId/coupleId。
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '../config/cloudbase';
 import { watchCollection } from '../services/realtime';
+import { IdentityOption, recordDeviceBinding } from '../services/identity';
 
 export interface UserDoc {
   _id: string;
@@ -24,12 +18,21 @@ export interface UserDoc {
   code?: string;
 }
 
-interface CoupleDoc {
+export interface CoupleDoc {
   _id: string;
   user1?: string;
   user2?: string;
   startDate?: number;
   status?: string;
+  rolls?: Record<string, {
+    id: string;
+    title: string;
+    type: 'normal' | 'secret';
+    status: 'open' | 'developed';
+    unlockAt?: number;
+    createdBy: string;
+    createdAt: number;
+  }>;
 }
 
 interface AuthState {
@@ -40,8 +43,8 @@ interface AuthState {
   partner: UserDoc | null;            // 伴侣实时文档
   couple: CoupleDoc | null;           // couple 文档（含 startDate 等）
   loading: boolean;
-  setAuth: (userId: string, gender: 'male' | 'female') => void;
-  clearAuth: () => void;
+  selectIdentity: (identity: IdentityOption) => Promise<void>;
+  resetIdentity: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState>({} as AuthState);
@@ -131,20 +134,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsub;
   }, [partnerId]);
 
-  function setAuth(uid: string, g: 'male' | 'female') {
-    setUserId(uid);
-    setBootstrapGender(g);
-    AsyncStorage.multiSet([['userId', uid], ['gender', g]]);
+  async function selectIdentity(identity: IdentityOption) {
+    setUserId(identity.id);
+    setBootstrapCoupleId(identity.coupleId);
+    setBootstrapGender(identity.gender);
+    await AsyncStorage.multiSet([
+      ['userId', identity.id],
+      ['coupleId', identity.coupleId],
+      ['gender', identity.gender],
+    ]);
+    recordDeviceBinding(identity).catch(() => {
+      // Binding metadata is helpful for background sync but must never block entry.
+    });
   }
 
-  function clearAuth() {
+  async function resetIdentity() {
     setUserId(null);
     setUser(null);
     setCouple(null);
     setPartner(null);
     setBootstrapCoupleId('');
     setBootstrapGender(null);
-    AsyncStorage.multiRemove(['userId', 'coupleId', 'gender']);
+    await AsyncStorage.multiRemove(['userId', 'coupleId', 'gender']);
   }
 
   return (
@@ -156,8 +167,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       partner,
       couple,
       loading,
-      setAuth,
-      clearAuth,
+      selectIdentity,
+      resetIdentity,
     }}>
       {children}
     </AuthContext.Provider>

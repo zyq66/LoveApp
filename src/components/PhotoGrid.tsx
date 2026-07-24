@@ -62,9 +62,9 @@ export function PhotoGrid({ photos, userId, onReact, onOpen, onDelete }: Props) 
         >
           <View style={{ position: 'relative' }}>
             <Image
-              source={{ uri: photo.url }}
+              source={{ uri: photo.thumbnailUrl || photo.url }}
               style={[styles.image, { height: h }]}
-              resizeMode="contain"
+              resizeMode="cover"
             />
             {/* 上传者角标 */}
             <View style={[styles.avatarBadge, isMe ? styles.avatarBadgeMe : styles.avatarBadgeThem]}>
